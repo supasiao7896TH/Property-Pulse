@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Property Pulse V4 - Tycoon Edition (Light Theme)</title>
     
     <!-- Content Security Policy -->
@@ -46,7 +46,12 @@
             background-attachment: fixed;
             color: var(--text-main);
             margin: 0; padding: 0; overflow: hidden;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+            text-rendering: optimizeLegibility;
         }
+        * { -webkit-touch-callout: none; }
+        input, textarea, select { -webkit-user-select: text; user-select: text; }
 
         /* Glassmorphism Classes (Light Theme) */
         .glass-panel {
@@ -84,7 +89,7 @@
         .nav-item i { margin-right: 0.75rem; transition: transform 0.2s; }
         .nav-item.active i { transform: scale(1.1); }
 
-        #main-content { flex: 1; padding: 2rem; overflow-y: auto; scroll-behavior: smooth; }
+        #main-content { flex: 1; padding: 2rem; overflow-y: auto; scroll-behavior: smooth; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
         .view-section {
             display: none; opacity: 0; transform: translateY(15px);
@@ -110,6 +115,18 @@
         .btn-secondary:hover { background: #f8fafc; }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
         .btn-danger:hover { background: rgba(239, 68, 68, 0.15); }
+
+        /* Fluid metric numbers — ย่อตามความกว้างการ์ด ไม่ให้ตัวเลขล้นขอบ */
+        .metric-value {
+            font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;
+            white-space: nowrap; display: block;
+            font-size: clamp(1.5rem, 1.1vw + 1.15rem, 2.25rem);
+        }
+        .metric-value-sm {
+            font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;
+            white-space: nowrap; display: block;
+            font-size: clamp(1.15rem, 0.6vw + 1rem, 1.6rem);
+        }
 
         .empty-state {
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem;
@@ -165,7 +182,8 @@
         #bottom-nav {
             display: none;
             position: fixed; bottom: 0; left: 0; right: 0;
-            height: 64px;
+            height: calc(64px + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
             background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(203, 213, 225, 0.6);
@@ -189,30 +207,66 @@
         /* =============================================
            ===== MOBILE RESPONSIVE (max 767px) ========
            ============================================= */
+        /* =============================================
+           ===== FLOATING ACTION BUTTON (MOBILE) ======
+           ============================================= */
+        #fab-add-tx {
+            display: none;
+            position: fixed;
+            right: 1.25rem;
+            bottom: calc(64px + env(safe-area-inset-bottom) + 1rem);
+            width: 56px; height: 56px;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            align-items: center; justify-content: center;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.45);
+            z-index: 60; border: none; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+        }
+        #fab-add-tx:active { transform: scale(0.9); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+
+        /* Transaction cards (mobile) */
+        .tx-card {
+            background: white; border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 1rem; padding: 0.9rem 1rem; display: flex;
+            align-items: center; gap: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: transform 0.12s ease;
+        }
+        .tx-card:active { transform: scale(0.98); }
+        .tx-card-icon { width: 42px; height: 42px; flex-shrink: 0; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; }
+
+        /* =============================================
+           ===== MOBILE RESPONSIVE (max 767px) ========
+           ============================================= */
         @media (max-width: 767px) {
             body { overflow: hidden; }
-            #app-container { height: 100svh; }
+            #app-container { height: 100dvh; }
             #sidebar { display: none !important; }
             #bottom-nav { display: flex; }
-            #main-content { padding: 1rem; padding-bottom: 5.5rem; }
+            #fab-add-tx { display: flex; }
+            #main-content { padding: 1rem; padding-bottom: calc(64px + env(safe-area-inset-bottom) + 1.5rem); }
 
             /* Modal → Bottom Sheet */
             .modal-backdrop { align-items: flex-end; }
             .modal-content {
                 width: 100% !important; max-width: 100% !important;
                 border-radius: 1.5rem 1.5rem 0 0 !important;
-                max-height: 92svh;
+                max-height: 92dvh;
+                padding-bottom: calc(2rem + env(safe-area-inset-bottom));
                 transform: translateY(100%) !important;
             }
             .modal-backdrop.active .modal-content { transform: translateY(0) !important; }
 
             /* Transaction table height & delete button */
-            #tx-history-panel { height: 52svh !important; }
+            #tx-history-panel { height: auto !important; max-height: none !important; }
+            #tx-scroll-area { max-height: 60dvh; }
             .delete-tx-btn { opacity: 1 !important; }
 
             /* Bigger touch targets */
             .btn { min-height: 48px; }
-            .input-glass { min-height: 48px; }
+            .input-glass { min-height: 48px; font-size: 16px; }
             .nav-item { min-height: 48px; }
 
             /* Page titles */
@@ -275,17 +329,45 @@
                 <div class="glass-card p-6 border-t-4 border-t-emerald-500 relative overflow-hidden bg-white/90">
                     <div class="absolute -right-4 -bottom-4 opacity-5"><i data-lucide="trending-up" class="w-32 h-32 text-emerald-500"></i></div>
                     <p class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">รายรับรวม</p>
-                    <h3 id="dash-income" class="text-4xl font-black text-emerald-600">฿0.00</h3>
+                    <h3 id="dash-income" class="metric-value text-emerald-600">฿0</h3>
                 </div>
                 <div class="glass-card p-6 border-t-4 border-t-red-500 relative overflow-hidden bg-white/90">
                     <div class="absolute -right-4 -bottom-4 opacity-5"><i data-lucide="trending-down" class="w-32 h-32 text-red-500"></i></div>
                     <p class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">รายจ่ายรวม</p>
-                    <h3 id="dash-expense" class="text-4xl font-black text-red-500">฿0.00</h3>
+                    <h3 id="dash-expense" class="metric-value text-red-500">฿0</h3>
                 </div>
                 <div class="glass-card p-6 bg-gradient-to-br from-blue-600 to-indigo-700 border-none relative overflow-hidden shadow-lg shadow-blue-500/20">
                     <div class="absolute right-0 bottom-0 opacity-20"><i data-lucide="wallet" class="w-32 h-32 text-white"></i></div>
                     <p class="text-sm font-bold text-blue-100 uppercase tracking-wider mb-1">กระแสเงินสดสุทธิ</p>
-                    <h3 id="dash-profit" class="text-4xl font-black text-white">฿0.00</h3>
+                    <h3 id="dash-profit" class="metric-value text-white">฿0</h3>
+                </div>
+            </div>
+
+            <!-- Portfolio Intelligence -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 kpi-grid">
+                <div class="glass-card p-5 bg-white/90 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center flex-shrink-0"><i data-lucide="hotel" class="text-indigo-600"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">อัตราการเช่า (Occupancy)</p>
+                        <h3 id="dash-occupancy" class="metric-value-sm text-indigo-600">0%</h3>
+                        <p id="dash-occupancy-sub" class="text-xs text-slate-400">0/0 ยูนิต</p>
+                    </div>
+                </div>
+                <div class="glass-card p-5 bg-white/90 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0"><i data-lucide="hand-coins" class="text-emerald-600"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">เก็บค่าเช่าแล้ว</p>
+                        <h3 id="dash-collected" class="metric-value-sm text-emerald-600">฿0</h3>
+                        <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden"><div id="dash-collected-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div></div>
+                    </div>
+                </div>
+                <div class="glass-card p-5 bg-white/90 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0"><i data-lucide="alarm-clock" class="text-amber-600"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">ค่าเช่าค้างเก็บ</p>
+                        <h3 id="dash-outstanding" class="metric-value-sm text-amber-600">฿0</h3>
+                        <p id="dash-outstanding-sub" class="text-xs text-slate-400">0 ยูนิตยังไม่จ่าย</p>
+                    </div>
                 </div>
             </div>
 
@@ -378,6 +460,10 @@
                             <h3 class="text-lg font-bold flex items-center gap-2 text-slate-800"><i data-lucide="filter" class="text-blue-500 w-5 h-5"></i> Advanced Data Filter</h3>
                             <button id="btn-reset-filters" type="button" class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"><i data-lucide="refresh-cw" class="w-3 h-3"></i> เคลียร์ตัวกรอง</button>
                         </div>
+                        <div class="relative mb-2">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                            <input type="search" id="filter-search" class="input-glass py-2 pl-9 pr-3 text-sm bg-white border-slate-200" placeholder="ค้นหา หมายเหตุ / หมวดหมู่ / ยูนิต / จำนวนเงิน...">
+                        </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <select id="filter-time" class="input-glass py-1.5 px-2 text-xs font-semibold bg-white border-slate-200"><option value="current">ข้อมูลเดือนนี้</option><option value="all">ข้อมูลทั้งหมด (All Time)</option></select>
                             <select id="filter-room" class="input-glass py-1.5 px-2 text-xs font-semibold bg-white border-slate-200"><option value="all">ทุกยูนิต</option></select>
@@ -385,13 +471,16 @@
                             <select id="filter-category" class="input-glass py-1.5 px-2 text-xs font-semibold bg-white border-slate-200"><option value="all">ทุกหมวดหมู่บัญชี</option></select>
                         </div>
                     </div>
-                    <div class="flex-1 overflow-auto">
-                        <table class="w-full text-sm text-left">
+                    <div id="tx-scroll-area" class="flex-1 overflow-auto">
+                        <!-- Desktop: table -->
+                        <table class="w-full text-sm text-left hidden md:table">
                             <thead class="text-xs text-slate-500 uppercase tracking-wider bg-slate-50 sticky top-0 backdrop-blur-md z-10 border-b border-slate-200">
                                 <tr><th class="px-5 py-4 font-bold">วันที่</th><th class="px-5 py-4 font-bold">ยูนิต/รายละเอียด</th><th class="px-5 py-4 font-bold text-right">จำนวนเงิน</th><th class="px-5 py-4 font-bold text-center">จัดการ</th></tr>
                             </thead>
                             <tbody id="tx-history-body" class="divide-y divide-slate-100"></tbody>
                         </table>
+                        <!-- Mobile: card list -->
+                        <div id="tx-history-cards" class="md:hidden p-3 space-y-2.5"></div>
                     </div>
                 </div>
             </div>
@@ -449,6 +538,42 @@
         <span>ตั้งค่า</span>
     </div>
 </nav>
+
+<!-- Floating Action Button (Mobile Only) -->
+<button id="fab-add-tx" aria-label="เพิ่มรายการบัญชีด่วน" title="เพิ่มรายการ">
+    <i data-lucide="plus" class="w-7 h-7"></i>
+</button>
+
+<!-- Quick Add Transaction Modal (Bottom Sheet on mobile) -->
+<div id="modal-quick-tx" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="quick-tx-title">
+    <div class="modal-content relative">
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-quick-tx" aria-label="ปิด"><i data-lucide="x"></i></button>
+        <div class="flex items-center gap-3 mb-6">
+            <div class="p-3 bg-blue-100 text-blue-600 rounded-xl"><i data-lucide="edit-3"></i></div>
+            <div><h3 id="quick-tx-title" class="text-2xl font-bold text-slate-800">ลงรายการด่วน</h3><p class="text-sm font-bold text-slate-500">บันทึกรับ/จ่ายได้ทันทีจากทุกหน้า</p></div>
+        </div>
+        <form id="form-quick-tx" class="space-y-4">
+            <div class="flex gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200">
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="qtx_type" value="Income" checked class="peer sr-only">
+                    <div class="text-center py-2.5 rounded-lg font-bold text-sm text-slate-500 peer-checked:bg-emerald-500 peer-checked:text-white transition shadow-sm">รายรับ (Income)</div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="qtx_type" value="Expense" class="peer sr-only">
+                    <div class="text-center py-2.5 rounded-lg font-bold text-sm text-slate-500 peer-checked:bg-red-500 peer-checked:text-white transition shadow-sm">รายจ่าย (Expense)</div>
+                </label>
+            </div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ยูนิตอ้างอิง</label><select id="qtx-room" class="input-glass bg-white" required></select></div>
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">วันที่</label><input type="date" id="qtx-date" class="input-glass bg-white" required></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">หมวดหมู่</label><select id="qtx-category" class="input-glass bg-white" required></select></div>
+            </div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ยอดเงิน (บาท)</label><div class="relative"><span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span><input type="number" inputmode="decimal" id="qtx-amount" class="input-glass pl-8 text-lg font-bold bg-white" required min="0.01" step="0.01" placeholder="0.00"></div></div>
+            <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">บันทึกเพิ่มเติม (Memo)</label><textarea id="qtx-desc" class="input-glass bg-white" rows="2"></textarea></div>
+            <button type="submit" class="btn btn-primary w-full shadow-md shadow-blue-500/20"><i data-lucide="save"></i> บันทึกยอด</button>
+        </form>
+    </div>
+</div>
 
 <!-- Modals & Toasts -->
 <div id="toast-container" class="toast-container"></div>
@@ -664,6 +789,8 @@ const App = (() => {
     });
 
     const formatMoney = (amt) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amt || 0);
+    // KPI cards — ตัดทศนิยมออกให้กระชับ ไม่ล้นช่อง (ปัดเป็นบาทเต็ม)
+    const formatMoneyShort = (amt) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(amt || 0);
     const showToast = (msg, type='info') => {
         const icons = { success: 'check-circle', error: 'alert-circle', info: 'info' };
         const c = document.getElementById('toast-container'); const el = document.createElement('div'); el.className = `toast ${type}`;
@@ -722,7 +849,36 @@ const App = (() => {
         }
     };
 
-    const renderAll = () => { renderDashboard(); renderRooms(); updateTxFormDeps(); renderTxTable(); };
+    const renderAll = () => { renderDashboard(); updateIntelligence(); renderRooms(); updateTxFormDeps(); renderTxTable(); };
+
+    // --- Feature: Portfolio Intelligence (based on selected month) ---
+    const updateIntelligence = () => {
+        const mStr = document.getElementById('dash-month').value;
+        const total = state.rooms.length;
+        const occupiedRooms = state.rooms.filter(r => r.tenant && r.tenant.name !== 'ว่าง');
+        const occupied = occupiedRooms.length;
+        const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
+
+        document.getElementById('dash-occupancy').textContent = `${rate}%`;
+        document.getElementById('dash-occupancy-sub').textContent = `${occupied}/${total} ยูนิตมีผู้เช่า`;
+
+        const monthTxs = mStr ? state.transactions.filter(t => t.date.startsWith(mStr)) : [];
+        const expected = occupiedRooms.reduce((s, r) => s + (r.tenant.rent || 0), 0);
+
+        let collected = 0, unpaidUnits = 0;
+        occupiedRooms.forEach(r => {
+            const got = monthTxs.filter(t => t.roomId === r.id && t.type === 'Income' && t.category === 'ค่าเช่า').reduce((s, t) => s + t.amount, 0);
+            collected += Math.min(got, r.tenant.rent || got);
+            if (got < (r.tenant.rent || 0)) unpaidUnits++;
+        });
+        const pct = expected > 0 ? Math.min(Math.round((collected / expected) * 100), 100) : 0;
+        const outstanding = Math.max(expected - collected, 0);
+
+        document.getElementById('dash-collected').textContent = formatMoneyShort(collected);
+        document.getElementById('dash-collected-bar').style.width = `${pct}%`;
+        document.getElementById('dash-outstanding').textContent = formatMoneyShort(outstanding);
+        document.getElementById('dash-outstanding-sub').textContent = `${unpaidUnits} ยูนิตยังเก็บไม่ครบ`;
+    };
 
     const renderDashboard = () => {
         let txs = []; let titleStr = '';
@@ -743,9 +899,9 @@ const App = (() => {
             if(rStats[t.roomId]){ if(t.type==='Income') rStats[t.roomId].inc+=t.amount; else rStats[t.roomId].exp+=t.amount;} 
         });
 
-        document.getElementById('dash-income').textContent = formatMoney(inc); 
-        document.getElementById('dash-expense').textContent = formatMoney(exp); 
-        document.getElementById('dash-profit').textContent = formatMoney(inc-exp);
+        document.getElementById('dash-income').textContent = formatMoneyShort(inc);
+        document.getElementById('dash-expense').textContent = formatMoneyShort(exp);
+        document.getElementById('dash-profit').textContent = formatMoneyShort(inc-exp);
 
         // --- แก้ไข: เรียงลำดับหมายเลขห้องจากน้อยไปมาก ---
         const sortedStats = Object.values(rStats).sort((a,b) => String(a.no).localeCompare(String(b.no), undefined, {numeric: true}));
@@ -830,29 +986,66 @@ const App = (() => {
 
     const renderTxTable = () => {
         const tbody = document.getElementById('tx-history-body');
+        const cardWrap = document.getElementById('tx-history-cards');
         const tF = document.getElementById('filter-time').value; const rF = document.getElementById('filter-room').value;
         const typeF = document.getElementById('filter-type').value; const cF = document.getElementById('filter-category').value;
-        
+        const q = (document.getElementById('filter-search').value || '').trim().toLowerCase();
+
         let txs = state.transactions;
         if(tF==='current') txs = txs.filter(t => t.date.startsWith(document.getElementById('dash-month').value));
         if(rF!=='all') txs = txs.filter(t => t.roomId===parseInt(rF));
         if(typeF!=='all') txs = txs.filter(t => t.type===typeF);
         if(cF!=='all') txs = txs.filter(t => t.category===cF);
+        if(q) txs = txs.filter(t => {
+            const r = state.rooms.find(x=>x.id===t.roomId);
+            const hay = `${t.date} ${t.category} ${t.desc||''} ${r?r.number:''} ${t.amount}`.toLowerCase();
+            return hay.includes(q);
+        });
 
-        if(txs.length===0){ tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400 font-bold">ไม่พบข้อมูลบัญชี</td></tr>'; return; }
+        if(txs.length===0){
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400 font-bold">ไม่พบข้อมูลบัญชี</td></tr>';
+            cardWrap.innerHTML = '<div class="text-center py-10 text-slate-400 font-bold text-sm">ไม่พบข้อมูลบัญชี</div>';
+            return;
+        }
 
-        tbody.innerHTML = txs.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(t => {
+        const sorted = txs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+        tbody.innerHTML = sorted.map(t => {
             const r = state.rooms.find(x=>x.id===t.roomId); const isInc = t.type==='Income';
-            return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition group"><td class="px-5 py-4 text-slate-500">${escHtml(t.date)}</td><td class="px-5 py-4"><div class="font-bold text-slate-800">Unit ${escHtml(r?r.number:'?')}</div><div class="text-xs text-slate-500 mt-1"><span class="px-2 py-0.5 bg-slate-100 rounded">${escHtml(t.category)}</span> ${t.desc?`<span class="ml-1 italic text-slate-400">${escHtml(t.desc)}</span>`:''}</div></td><td class="px-5 py-4 text-right font-black text-lg ${isInc?'text-emerald-600':'text-red-500'}">${isInc?'+':'-'}${formatMoney(t.amount)}</td><td class="px-5 py-4 text-center"><button class="text-slate-400 hover:text-red-500 bg-white hover:bg-red-50 p-2 rounded-lg transition opacity-0 group-hover:opacity-100 delete-tx-btn border border-transparent hover:border-red-100 shadow-sm" data-id="${t.id}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+            return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition group"><td class="px-5 py-4 text-slate-500">${escHtml(t.date)}</td><td class="px-5 py-4"><div class="font-bold text-slate-800">Unit ${escHtml(r?r.number:'?')}</div><div class="text-xs text-slate-500 mt-1"><span class="px-2 py-0.5 bg-slate-100 rounded">${escHtml(t.category)}</span> ${t.desc?`<span class="ml-1 italic text-slate-400">${escHtml(t.desc)}</span>`:''}</div></td><td class="px-5 py-4 text-right font-black text-lg ${isInc?'text-emerald-600':'text-red-500'}">${isInc?'+':'-'}${formatMoney(t.amount)}</td><td class="px-5 py-4 text-center"><button class="text-slate-400 hover:text-red-500 bg-white hover:bg-red-50 p-2 rounded-lg transition opacity-0 group-hover:opacity-100 delete-tx-btn border border-transparent hover:border-red-100 shadow-sm" data-id="${t.id}" aria-label="ลบรายการ"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
         }).join('');
+
+        // Mobile card list
+        cardWrap.innerHTML = sorted.map(t => {
+            const r = state.rooms.find(x=>x.id===t.roomId); const isInc = t.type==='Income';
+            return `<div class="tx-card">
+                <div class="tx-card-icon ${isInc?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-500'}"><i data-lucide="${isInc?'arrow-down-left':'arrow-up-right'}" class="w-5 h-5"></i></div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-slate-800 text-sm truncate">Unit ${escHtml(r?r.number:'?')} · <span class="font-medium text-slate-500">${escHtml(t.category)}</span></div>
+                    <div class="text-xs text-slate-400 mt-0.5">${escHtml(t.date)}${t.desc?` · ${escHtml(t.desc)}`:''}</div>
+                </div>
+                <div class="text-right flex flex-col items-end gap-1">
+                    <span class="font-black ${isInc?'text-emerald-600':'text-red-500'}">${isInc?'+':'-'}${formatMoney(t.amount)}</span>
+                    <button class="text-slate-300 active:text-red-500 delete-tx-btn p-1" data-id="${t.id}" aria-label="ลบรายการ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            </div>`;
+        }).join('');
+
         if(typeof lucide!=='undefined') lucide.createIcons();
     };
 
     const updateTxFormDeps = () => {
-        const rs = document.getElementById('tx-room'); rs.innerHTML = state.rooms.map(r=>`<option value="${r.id}">Unit ${r.number}</option>`).join('') || '<option value="">กรุณาลงทะเบียนยูนิตก่อน</option>';
+        const roomOpts = state.rooms.map(r=>`<option value="${r.id}">Unit ${r.number}</option>`).join('') || '<option value="">กรุณาลงทะเบียนยูนิตก่อน</option>';
+        const rs = document.getElementById('tx-room'); rs.innerHTML = roomOpts;
         const type = document.querySelector('input[name="tx_type"]:checked').value;
         document.getElementById('tx-category').innerHTML = CONFIG.CATEGORIES[type].map(c=>`<option value="${c}">${c}</option>`).join('');
-        
+
+        // Quick-add (FAB) form deps
+        const qrs = document.getElementById('qtx-room'); if(qrs) qrs.innerHTML = roomOpts;
+        const qTypeEl = document.querySelector('input[name="qtx_type"]:checked');
+        const qCat = document.getElementById('qtx-category');
+        if(qTypeEl && qCat) qCat.innerHTML = CONFIG.CATEGORIES[qTypeEl.value].map(c=>`<option value="${c}">${c}</option>`).join('');
+
         const fR = document.getElementById('filter-room'); const cvR = fR.value;
         fR.innerHTML = '<option value="all">ทุกยูนิต</option>' + state.rooms.map(r=>`<option value="${r.id}">Unit ${r.number}</option>`).join('');
         if(state.rooms.find(r=>r.id==cvR)) fR.value = cvR;
@@ -1040,7 +1233,12 @@ const App = (() => {
         document.getElementById('filter-room').addEventListener('change', renderTxTable);
         document.getElementById('filter-type').addEventListener('change', ()=>{ updateTxFormDeps(); renderTxTable(); });
         document.getElementById('filter-category').addEventListener('change', renderTxTable);
-        document.getElementById('btn-reset-filters').addEventListener('click', ()=>{ document.getElementById('filter-time').value='current'; document.getElementById('filter-room').value='all'; document.getElementById('filter-type').value='all'; updateTxFormDeps(); document.getElementById('filter-category').value='all'; renderTxTable(); });
+
+        // Search box (debounced)
+        const debounce = (fn, delay=300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), delay); }; };
+        document.getElementById('filter-search').addEventListener('input', debounce(renderTxTable, 250));
+
+        document.getElementById('btn-reset-filters').addEventListener('click', ()=>{ document.getElementById('filter-time').value='current'; document.getElementById('filter-room').value='all'; document.getElementById('filter-type').value='all'; document.getElementById('filter-search').value=''; updateTxFormDeps(); document.getElementById('filter-category').value='all'; renderTxTable(); });
 
         document.getElementById('list-rooms').addEventListener('click', e => {
             const tBtn = e.target.closest('.manage-tenant-btn'); 
@@ -1135,7 +1333,7 @@ const App = (() => {
             }
         });
 
-        document.getElementById('tx-history-body').addEventListener('click', async e => {
+        const handleTxDelete = async e => {
             const dBtn = e.target.closest('.delete-tx-btn');
             if(dBtn) {
                 const ok = await customConfirm('ลบรายการบัญชีนี้ทิ้ง?');
@@ -1146,6 +1344,37 @@ const App = (() => {
                 renderAll();
                 showToast('ลบรายการสำเร็จ','success');
             }
+        };
+        document.getElementById('tx-history-body').addEventListener('click', handleTxDelete);
+        document.getElementById('tx-history-cards').addEventListener('click', handleTxDelete);
+
+        // --- FAB + Quick-add transaction (mobile) ---
+        document.getElementById('fab-add-tx').addEventListener('click', () => {
+            if(state.rooms.length === 0) return showToast('กรุณาลงทะเบียนยูนิตก่อนครับ', 'error');
+            document.getElementById('qtx-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('qtx-amount').value = '';
+            document.getElementById('qtx-desc').value = '';
+            updateTxFormDeps();
+            document.getElementById('modal-quick-tx').classList.add('active');
+        });
+        document.querySelectorAll('input[name="qtx_type"]').forEach(r => r.addEventListener('change', updateTxFormDeps));
+        document.getElementById('form-quick-tx').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(state.rooms.length === 0) return;
+            const tx = {
+                id: Date.now(),
+                roomId: parseInt(document.getElementById('qtx-room').value),
+                date: document.getElementById('qtx-date').value,
+                type: document.querySelector('input[name="qtx_type"]:checked').value,
+                category: document.getElementById('qtx-category').value,
+                amount: parseFloat(document.getElementById('qtx-amount').value),
+                desc: document.getElementById('qtx-desc').value
+            };
+            await DBManager.put('transactions', tx); state.transactions.push(tx);
+            document.getElementById('modal-quick-tx').classList.remove('active');
+            e.target.reset();
+            renderAll();
+            showToast('ลงบันทึกบัญชีสำเร็จ', 'success');
         });
 
         document.getElementById('btn-analyze-ai').addEventListener('click', async () => {
