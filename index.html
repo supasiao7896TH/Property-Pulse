@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Property Pulse V4 - Tycoon Edition (Light Theme)</title>
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PropPulse">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' blob: data: https://generativelanguage.googleapis.com;">
 
@@ -489,7 +498,24 @@
         <!-- VIEW: SETTINGS -->
         <section id="view-settings" class="view-section space-y-6">
             <h2 class="text-3xl font-bold tracking-tight text-slate-800">ตั้งค่าระบบ (System Config)</h2>
-            
+
+            <!-- Share / Install PWA card -->
+            <div class="glass-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0"><i data-lucide="share-2" class="text-blue-600 w-5 h-5"></i></div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">แชร์แอพ / ติดตั้ง PWA</h3>
+                        <p class="text-xs text-slate-500">ส่ง link นี้ให้เพื่อนเปิดในมือถือแล้วกด "Add to Home screen"</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <div class="flex-1 px-4 py-2.5 bg-white rounded-xl border border-blue-200 text-sm font-mono text-slate-600 select-all truncate" id="pwa-url-display">https://supasiao7896th.github.io/Property-Pulse/</div>
+                    <button id="btn-copy-link" class="btn btn-primary shrink-0 gap-2 text-sm">
+                        <i data-lucide="copy" class="w-4 h-4"></i> Copy
+                    </button>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass-card p-6 bg-white/80">
                     <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4"><i data-lucide="cpu" class="text-purple-600"></i></div>
@@ -1453,6 +1479,38 @@ const App = (() => {
 })();
 
 document.addEventListener('DOMContentLoaded', App.start);
+
+/* ── Copy PWA link button ── */
+document.getElementById('btn-copy-link').addEventListener('click', () => {
+    const url = document.getElementById('pwa-url-display').textContent.trim();
+    navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('btn-copy-link');
+        btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Copied!';
+        btn.classList.replace('btn-primary', 'btn-success');
+        btn.style.background = '#10b981';
+        if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [btn] });
+        setTimeout(() => {
+            btn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i> Copy';
+            btn.style.background = '';
+            btn.classList.replace('btn-success', 'btn-primary');
+            if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [btn] });
+        }, 2000);
+    }).catch(() => {
+        /* fallback for older browsers */
+        const el = document.createElement('textarea');
+        el.value = url; el.style.position = 'fixed'; el.style.opacity = '0';
+        document.body.appendChild(el); el.select();
+        document.execCommand('copy'); document.body.removeChild(el);
+        showToast('คัดลอก Link สำเร็จ!', 'success');
+    });
+});
+
+/* ── PWA: Register Service Worker ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
