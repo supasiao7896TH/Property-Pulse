@@ -627,11 +627,80 @@
                     <input type="number" id="edit-room-loan" class="input-glass pl-8 bg-white" required min="0">
                 </div>
             </div>
+            <div class="border-t border-slate-100 pt-4">
+                <p class="text-xs font-bold text-slate-500 uppercase mb-3">ข้อมูลสินเชื่อ (สำหรับคำนวณยอดคงเหลือ)</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">ยอดเงินกู้คงเหลือ ณ เดือนที่บันทึก (฿)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span>
+                            <input type="number" id="edit-room-balance" class="input-glass pl-8 bg-white" min="0" placeholder="เช่น 1200000">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">ดอกเบี้ย (% ต่อปี)</label>
+                            <div class="relative">
+                                <input type="number" id="edit-room-rate" class="input-glass pr-8 bg-white" min="0" max="30" step="0.01" placeholder="3.50">
+                                <span class="absolute right-3 top-3 text-slate-400 text-sm font-bold">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">ยอด ณ เดือน</label>
+                            <input type="month" id="edit-room-balance-asof" class="input-glass bg-white">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="pt-4 flex justify-end gap-3">
                 <button type="button" class="btn btn-secondary modal-close-btn" data-modal="modal-room-edit">ยกเลิก</button>
                 <button type="submit" class="btn btn-primary px-8 shadow-blue-500/30"><i data-lucide="save"></i> บันทึก</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Loan Amortization Schedule Modal -->
+<div id="modal-loan-schedule" class="modal-backdrop">
+    <div class="modal-content relative">
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-loan-schedule"><i data-lucide="x"></i></button>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-3 bg-purple-100 text-purple-600 rounded-xl"><i data-lucide="calculator"></i></div>
+            <div><h3 class="text-xl font-bold text-slate-800">ตารางผ่อนชำระ</h3><p id="ls-subtitle" class="text-sm font-bold text-slate-500"></p></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                <div class="text-[10px] text-slate-500 font-bold uppercase">ยอดคงเหลือปัจจุบัน</div>
+                <div id="ls-current-balance" class="font-black text-slate-800 text-base mt-0.5"></div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                <div class="text-[10px] text-slate-500 font-bold uppercase">คาดว่าผ่อนหมด</div>
+                <div id="ls-payoff-date" class="font-black text-slate-800 text-base mt-0.5"></div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 mb-3">
+            <label class="text-sm font-bold text-slate-600 whitespace-nowrap">แสดง</label>
+            <input type="number" id="ls-months-input" class="input-glass bg-white w-20 text-center text-sm" min="1" max="360" value="12">
+            <label class="text-sm font-bold text-slate-600 whitespace-nowrap">เดือน</label>
+            <button id="ls-refresh-btn" class="ml-2 px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg">แสดง</button>
+        </div>
+        <div class="overflow-auto max-h-60 rounded-xl border border-slate-200">
+            <table class="w-full text-xs">
+                <thead class="bg-slate-100 sticky top-0">
+                    <tr>
+                        <th class="p-2 text-left font-bold text-slate-600">เดือน</th>
+                        <th class="p-2 text-right font-bold text-slate-600">ดอกเบี้ย</th>
+                        <th class="p-2 text-right font-bold text-slate-600">ตัดต้น</th>
+                        <th class="p-2 text-right font-bold text-slate-600">ยอดคงเหลือ</th>
+                    </tr>
+                </thead>
+                <tbody id="ls-table-body"></tbody>
+            </table>
+        </div>
+        <div class="mt-3 p-3 bg-purple-50 rounded-xl border border-purple-100 space-y-1 text-xs">
+            <div class="flex justify-between"><span class="text-slate-600">ดอกเบี้ยรวม (ช่วงที่เลือก)</span><span id="ls-total-interest" class="font-bold text-red-500"></span></div>
+            <div class="flex justify-between"><span class="text-slate-600">ตัดเงินต้นรวม (ช่วงที่เลือก)</span><span id="ls-total-principal" class="font-bold text-emerald-600"></span></div>
+        </div>
     </div>
 </div>
 
@@ -852,6 +921,51 @@ const App = (() => {
 
     const renderAll = () => { renderDashboard(); updateIntelligence(); renderRooms(); updateTxFormDeps(); renderTxTable(); };
 
+    const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const fmtMonthThai = (ym) => { const [y,m] = ym.split('-'); return `${thaiMonths[+m-1]} ${+y+543}`; };
+
+    const calcLoanCurrentBalance = (room) => {
+        if (!room.loanBalance || !room.loanRate || !room.loanBalanceAsOf || !room.loan) return null;
+        const monthlyRate = room.loanRate / 100 / 12;
+        let remaining = room.loanBalance;
+        const [ay, am] = room.loanBalanceAsOf.split('-').map(Number);
+        const now = new Date();
+        const monthsElapsed = (now.getFullYear() - ay) * 12 + ((now.getMonth() + 1) - am);
+        for (let i = 0; i < monthsElapsed && remaining > 0.5; i++) {
+            const interest = remaining * monthlyRate;
+            const principal = room.loan - interest;
+            if (principal <= 0) break;
+            remaining = Math.max(remaining - principal, 0);
+        }
+        return Math.round(remaining);
+    };
+
+    const calcLoanSchedule = (room, previewMonths) => {
+        const currentBalance = calcLoanCurrentBalance(room);
+        if (currentBalance === null) return { schedule: [], totalMonths: 0, currentBalance: 0 };
+        const monthlyRate = room.loanRate / 100 / 12;
+        let tempRem = currentBalance; let totalMonths = 0;
+        while (tempRem > 0.5 && totalMonths < 600) {
+            const interest = tempRem * monthlyRate;
+            const principal = room.loan - interest;
+            if (principal <= 0) break;
+            tempRem = Math.max(tempRem - principal, 0);
+            totalMonths++;
+        }
+        const schedule = [];
+        let remaining = currentBalance;
+        const now = new Date(); let year = now.getFullYear(); let month = now.getMonth() + 1;
+        for (let i = 0; i < previewMonths && remaining > 0.5; i++) {
+            const interest = remaining * monthlyRate;
+            const principal = Math.min(room.loan - interest, remaining);
+            if (principal <= 0) break;
+            remaining = Math.max(remaining - principal, 0);
+            schedule.push({ month: `${year}-${String(month).padStart(2,'0')}`, interest: Math.round(interest), principal: Math.round(principal), balance: Math.round(remaining) });
+            month++; if (month > 12) { month = 1; year++; }
+        }
+        return { schedule, totalMonths, currentBalance };
+    };
+
     // --- Feature: Portfolio Intelligence (based on selected month) ---
     const updateIntelligence = () => {
         const mStr = document.getElementById('dash-month').value;
@@ -996,6 +1110,15 @@ const App = (() => {
                     ? `<button class="py-2 bg-slate-100 text-blue-500 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ รับแล้ว</button>`
                     : `<button class="py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-collect-rent-btn shadow-sm" data-id="${room.id}" data-rent="${t.rent}"><i data-lucide="wallet" class="w-4 h-4"></i> เก็บค่าเช่า</button>`);
 
+            const hasLoanData = room.loanBalance > 0 && room.loanRate > 0 && room.loanBalanceAsOf;
+            const currentBalance = hasLoanData ? calcLoanCurrentBalance(room) : null;
+            const balanceDisplay = currentBalance !== null
+                ? `<div class="text-[10px] text-purple-500 font-bold mt-0.5">คงเหลือ ~${formatMoneyShort(currentBalance)}</div>`
+                : '';
+            const calcBtn = hasLoanData
+                ? `<button class="py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 loan-schedule-btn shadow-sm" data-id="${room.id}" title="ตารางผ่อนชำระ"><i data-lucide="calculator" class="w-4 h-4"></i></button>`
+                : `<button class="py-2 bg-slate-50 text-slate-200 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled title="ยังไม่ได้กรอกข้อมูลสินเชื่อ"><i data-lucide="calculator" class="w-4 h-4"></i></button>`;
+
             return `
                 <div class="p-6 glass-card relative flex flex-col justify-between h-full bg-white">
                     <div>
@@ -1009,7 +1132,7 @@ const App = (() => {
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mb-5">
                             <div class="flex justify-between text-sm border-b border-slate-200 pb-2">
-                                <div><span class="text-xs text-slate-500 font-bold uppercase block">Bank Loan</span><span class="${loanStatusColor} text-[10px] font-bold uppercase">${loanStatusText}</span></div>
+                                <div><span class="text-xs text-slate-500 font-bold uppercase block">Bank Loan</span><span class="${loanStatusColor} text-[10px] font-bold uppercase">${loanStatusText}</span>${balanceDisplay}</div>
                                 <div class="text-right"><span class="block font-bold text-slate-700">${formatMoney(room.loan)}</span><span class="text-[10px] text-slate-400">Actual: ${formatMoney(aLoan)}</span></div>
                             </div>
                             <div class="flex justify-between text-sm">
@@ -1024,6 +1147,7 @@ const App = (() => {
                         ${rentBtn}
                         <button class="col-span-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 manage-tenant-btn shadow-sm" data-id="${room.id}"><i data-lucide="user" class="w-4 h-4"></i> ผู้เช่า</button>
                         <button class="py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition flex items-center justify-center manage-doc-btn shadow-sm" data-id="${room.id}" title="คลังเอกสาร"><i data-lucide="folder" class="w-4 h-4"></i></button>
+                        ${calcBtn}
                         <button class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center generate-invoice-btn shadow-sm" data-id="${room.id}" title="พิมพ์ใบแจ้งหนี้"><i data-lucide="printer" class="w-4 h-4"></i></button>
                     </div>
                 </div>
@@ -1321,6 +1445,9 @@ const App = (() => {
                     document.getElementById('edit-room-id').value = r.id;
                     document.getElementById('edit-room-no').value = r.number;
                     document.getElementById('edit-room-loan').value = r.loan;
+                    document.getElementById('edit-room-balance').value = r.loanBalance || '';
+                    document.getElementById('edit-room-rate').value = r.loanRate || '';
+                    document.getElementById('edit-room-balance-asof').value = r.loanBalanceAsOf || '';
                     document.getElementById('modal-room-edit').classList.add('active');
                 }
             }
@@ -1359,14 +1486,20 @@ const App = (() => {
             const no = document.getElementById('edit-room-no').value; 
             const ln = parseFloat(document.getElementById('edit-room-loan').value);
             
+            const bal = parseFloat(document.getElementById('edit-room-balance').value) || 0;
+            const rate = parseFloat(document.getElementById('edit-room-rate').value) || 0;
+            const asof = document.getElementById('edit-room-balance-asof').value;
             const idx = state.rooms.findIndex(r=>r.id===id);
             if(idx > -1){
                 if(state.rooms.find(r => r.number === no && r.id !== id)) return showToast('มีชื่อยูนิตนี้ในระบบแล้ว', 'error');
                 state.rooms[idx].number = no;
                 state.rooms[idx].loan = ln;
-                await DBManager.put('rooms', state.rooms[idx]); 
-                document.getElementById('modal-room-edit').classList.remove('active'); 
-                renderAll(); 
+                state.rooms[idx].loanBalance = bal;
+                state.rooms[idx].loanRate = rate;
+                state.rooms[idx].loanBalanceAsOf = asof;
+                await DBManager.put('rooms', state.rooms[idx]);
+                document.getElementById('modal-room-edit').classList.remove('active');
+                renderAll();
                 showToast('แก้ไขข้อมูลยูนิตสำเร็จ', 'success');
             }
         });
@@ -1405,6 +1538,54 @@ const App = (() => {
         };
         document.getElementById('tx-history-body').addEventListener('click', handleTxDelete);
         document.getElementById('tx-history-cards').addEventListener('click', handleTxDelete);
+
+        // --- Loan Schedule Modal ---
+        const renderLoanSchedule = (roomId, months) => {
+            const room = state.rooms.find(r => r.id === roomId);
+            if (!room) return;
+            const { schedule, totalMonths, currentBalance } = calcLoanSchedule(room, months);
+            const now = new Date();
+            const payoffDate = totalMonths > 0
+                ? (() => { let y = now.getFullYear(); let m = now.getMonth() + 1 + totalMonths; y += Math.floor((m-1)/12); m = ((m-1)%12)+1; return fmtMonthThai(`${y}-${String(m).padStart(2,'0')}`); })()
+                : '-';
+            document.getElementById('ls-subtitle').textContent = `ยูนิต ${room.number} · ${room.loanRate}% ต่อปี`;
+            document.getElementById('ls-current-balance').textContent = currentBalance !== null ? formatMoney(currentBalance) : '-';
+            document.getElementById('ls-payoff-date').textContent = payoffDate;
+            let totalInt = 0, totalPrin = 0;
+            document.getElementById('ls-table-body').innerHTML = schedule.map((row, i) => {
+                totalInt += row.interest; totalPrin += row.principal;
+                const isNow = i === 0;
+                return `<tr class="${isNow ? 'bg-purple-50 font-bold' : 'hover:bg-slate-50'} border-b border-slate-100">
+                    <td class="p-2 ${isNow?'text-purple-700':''}">${fmtMonthThai(row.month)}${isNow?' ◀':''}</td>
+                    <td class="p-2 text-right text-red-500">${formatMoney(row.interest)}</td>
+                    <td class="p-2 text-right text-emerald-600">${formatMoney(row.principal)}</td>
+                    <td class="p-2 text-right text-slate-700">${formatMoney(row.balance)}</td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-xs">ไม่มีข้อมูล — กรุณากรอกข้อมูลสินเชื่อในหน้าแก้ไขยูนิต</td></tr>';
+            document.getElementById('ls-total-interest').textContent = formatMoney(totalInt);
+            document.getElementById('ls-total-principal').textContent = formatMoney(totalPrin);
+        };
+
+        document.getElementById('list-rooms').addEventListener('click', e => {
+            const btn = e.target.closest('.loan-schedule-btn');
+            if (!btn) return;
+            const roomId = parseInt(btn.dataset.id);
+            state.loanScheduleRoomId = roomId;
+            document.getElementById('ls-months-input').value = 12;
+            renderLoanSchedule(roomId, 12);
+            document.getElementById('modal-loan-schedule').classList.add('active');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+
+        document.getElementById('ls-refresh-btn').addEventListener('click', () => {
+            const months = Math.min(Math.max(parseInt(document.getElementById('ls-months-input').value) || 12, 1), 360);
+            document.getElementById('ls-months-input').value = months;
+            renderLoanSchedule(state.loanScheduleRoomId, months);
+        });
+
+        document.getElementById('ls-months-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('ls-refresh-btn').click();
+        });
 
         // --- FAB + Quick-add transaction (mobile) ---
         document.getElementById('fab-add-tx').addEventListener('click', () => {
