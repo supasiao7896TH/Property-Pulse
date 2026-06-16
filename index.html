@@ -382,31 +382,11 @@
                 </div>
             </div>
 
-            <!-- AI Box -->
-            <div class="glass-card p-6 border-l-4 border-l-purple-500 bg-purple-50/50">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <h3 class="text-lg font-bold flex items-center gap-2 text-slate-800"><i data-lucide="bot" class="text-purple-600"></i> Tycoon AI Analyst</h3>
-                        <p class="text-sm text-slate-500 mt-1">ให้ AI สรุปรายงานการเงินและให้คำแนะนำเชิงกลยุทธ์สำหรับนักลงทุน</p>
-                    </div>
-                    <button id="btn-analyze-ai" class="btn bg-purple-600 hover:bg-purple-700 text-white text-sm shadow-md shadow-purple-500/30">
-                        <i data-lucide="sparkles" class="w-4 h-4"></i> สกัด Insight
-                    </button>
-                </div>
-                <div id="ai-result-box" class="hidden mt-4 p-5 bg-white rounded-xl text-sm leading-relaxed border border-purple-100 text-slate-700 shadow-sm"></div>
-            </div>
 
-            <!-- Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="glass-card p-6">
-                    <h3 class="text-lg font-bold mb-4 text-slate-800">การกระจายตัวของกระแสเงินสด</h3>
-                    <div class="relative h-72 w-full"><canvas id="chart-summary"></canvas></div>
-                </div>
-                <div class="glass-card p-6 flex flex-col">
-                    <h3 class="text-lg font-bold mb-4 text-slate-800">ผลประกอบการรายยูนิต</h3>
-                    <!-- ปรับเพิ่ม max-height เป็น 400px เพื่อไม่ให้ตกขอบ และให้ scroll ได้สะดวก -->
-                    <div id="dash-room-summary" class="flex-1 overflow-y-auto pr-2 space-y-3 max-h-[400px]"></div>
-                </div>
+            <!-- Unit Performance -->
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold mb-4 text-slate-800">ผลประกอบการรายยูนิต</h3>
+                <div id="dash-room-summary" class="space-y-3 max-h-[400px] overflow-y-auto pr-2"></div>
             </div>
         </section>
 
@@ -1023,29 +1003,13 @@ const App = (() => {
 
         document.getElementById('dash-room-summary').innerHTML = sortedStats.map(st => {
             const p = st.inc - st.exp; const isP = p>=0;
-            return `<div class="p-4 bg-white rounded-xl border border-slate-200 flex justify-between items-center shadow-sm"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold ${isP?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-600'}">${escHtml(st.no)}</div><div><div class="text-xs text-slate-500 font-bold uppercase tracking-wide">Net Profit</div><div class="font-bold text-lg ${isP?'text-emerald-600':'text-red-500'}">${formatMoney(p)}</div></div></div><div class="text-right hidden sm:block text-xs text-slate-500"><div>รับ: ${formatMoney(st.inc)}</div><div>จ่าย: ${formatMoney(st.exp)}</div></div></div>`;
+            return `<div class="p-4 bg-white rounded-xl border border-slate-200 flex justify-between items-center shadow-sm"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center font-bold ${isP?'bg-emerald-100 text-emerald-600':'bg-red-100 text-red-600'}">${escHtml(st.no)}</div><div><div class="text-xs text-slate-500 font-bold uppercase tracking-wide">Net Profit</div><div class="font-bold text-lg ${isP?'text-emerald-600':'text-red-500'}">${formatMoney(p)}</div></div></div><div class="text-right text-xs text-slate-500"><div class="text-emerald-600 font-bold">รับ: ${formatMoney(st.inc)}</div><div class="text-red-500 font-bold">จ่าย: ${formatMoney(st.exp)}</div></div></div>`;
         }).join('') || '<p class="text-sm text-center text-slate-400 py-4">ไม่มีข้อมูล</p>';
 
         const aBox = document.getElementById('dash-alerts'); let aH = '';
         state.rooms.forEach(r => { const d = getDaysLeft(r.tenant?.end); if(d!==null&&d<=45){ if(d<0) aH+=`<div class="p-3 mb-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold flex items-center gap-2 rounded-r-xl shadow-sm"><i data-lucide="alert-octagon"></i> ยูนิต ${escHtml(r.number)} สัญญาหมดอายุแล้ว!</div>`; else aH+=`<div class="p-3 mb-3 bg-amber-50 border-l-4 border-amber-500 text-amber-700 text-sm font-bold flex items-center gap-2 rounded-r-xl shadow-sm"><i data-lucide="clock"></i> ยูนิต ${escHtml(r.number)} หมดสัญญาใน ${escHtml(d)} วัน</div>`; } });
         if(aH){ aBox.innerHTML=aH; aBox.classList.remove('hidden'); if(typeof lucide!=='undefined') lucide.createIcons();} else aBox.classList.add('hidden');
 
-        const ctx = document.getElementById('chart-summary').getContext('2d'); if(state.chart) state.chart.destroy();
-        
-        if(state.viewMode === 'month') {
-            state.chart = new Chart(ctx, { type:'doughnut', data:{labels:['รายรับ','รายจ่าย'], datasets:[{data:[inc,exp],backgroundColor:['#34d399','#f87171'],borderWidth:0, cutout:'75%'}]}, options:{responsive:true,maintainAspectRatio:false, plugins: {legend:{labels:{color:'#64748b', font:{family:'Sarabun'}}}}} });
-        } else {
-            let mInc = Array(12).fill(0); let mExp = Array(12).fill(0);
-            txs.forEach(t => {
-                const mIdx = parseInt(t.date.split('-')[1]) - 1;
-                if(t.type === 'Income') mInc[mIdx] += t.amount; else mExp[mIdx] += t.amount;
-            });
-            state.chart = new Chart(ctx, { 
-                type:'bar', 
-                data:{labels:['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], datasets:[{label:'รายรับ',data:mInc,backgroundColor:'#34d399',borderRadius:4},{label:'รายจ่าย',data:mExp,backgroundColor:'#f87171',borderRadius:4}]}, 
-                options:{responsive:true,maintainAspectRatio:false, scales:{y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#64748b'}},x:{grid:{display:false},ticks:{color:'#64748b'}}}, plugins:{legend:{labels:{color:'#64748b', font:{family:'Sarabun'}}}}} 
-            });
-        }
     };
 
     const renderRooms = () => {
@@ -1614,22 +1578,6 @@ const App = (() => {
             e.target.reset();
             renderAll();
             showToast('ลงบันทึกบัญชีสำเร็จ', 'success');
-        });
-
-        document.getElementById('btn-analyze-ai').addEventListener('click', async () => {
-            if(!state.apiKey) return showToast('ตั้งค่า API Key ก่อนครับ', 'error');
-            const box = document.getElementById('ai-result-box'); const btn = document.getElementById('btn-analyze-ai');
-            box.classList.remove('hidden'); box.innerHTML = '<span class="typing-cursor">Tycoon AI กำลังประมวลผล...</span>'; btn.disabled = true;
-
-            const periodStr = state.viewMode === 'month' ? document.getElementById('dash-month').value : document.getElementById('dash-year').value;
-            const txs = state.transactions.filter(t => t.date.startsWith(periodStr));
-            const totalInc = txs.filter(t=>t.type==='Income').reduce((s,t)=>s+t.amount,0);
-            const totalExp = txs.filter(t=>t.type==='Expense').reduce((s,t)=>s+t.amount,0);
-            const unitCount = state.rooms.length;
-            const prompt = `ในฐานะที่ปรึกษาอสังหาฯระดับ Enterprise ช่วยวิเคราะห์ผลประกอบการช่วง ${periodStr} จำนวน ${unitCount} ยูนิต (รับรวม ${totalInc} บาท, จ่ายรวม ${totalExp} บาท, กำไรสุทธิ ${totalInc-totalExp} บาท) พิมพ์สรุป Executive Summary แบบดุดัน มั่นใจ ชี้จุดตาย 1 ข้อ และแผนเพิ่มกำไร 1 ข้อสั้นๆ`;
-
-            let fText = '';
-            await AIService.streamAnalysis( prompt, state.apiKey, (c) => { fText += c; box.innerHTML = fText.replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-600">$1</strong>').replace(/\n/g, '<br>') + '<span class="typing-cursor"></span>'; }, () => { box.innerHTML = box.innerHTML.replace('<span class="typing-cursor"></span>', ''); btn.disabled = false; }, (err) => { box.textContent = ''; const errSpan = document.createElement('span'); errSpan.className = 'text-red-500'; errSpan.textContent = `Error: ${err.message}`; box.appendChild(errSpan); btn.disabled = false; });
         });
 
         document.getElementById('btn-save-key').addEventListener('click', async () => { const k = document.getElementById('input-api-key').value; await DBManager.put('settings', {key:'gemini_key',value:k}); state.apiKey=k; showToast('ระบบเชื่อมต่อ AI สำเร็จ','success'); });
