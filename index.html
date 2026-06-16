@@ -498,18 +498,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass-card p-6 bg-white/80">
-                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4"><i data-lucide="cpu" class="text-purple-600"></i></div>
-                    <h3 class="text-xl font-bold mb-2 text-slate-800">Gemini AI Engine</h3>
-                    <p class="text-sm text-slate-500 mb-6">ตั้งค่า API Key สำหรับเปิดใช้งาน Agent วิเคราะห์อสังหาฯ ส่วนตัว</p>
-                    <div class="flex gap-2">
-                        <div class="relative flex-1"><i data-lucide="key" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i><input type="password" id="input-api-key" class="input-glass pl-9 bg-white" placeholder="AIzaSy..."></div>
-                        <button id="btn-save-key" class="btn btn-primary">เชื่อมต่อ</button>
-                    </div>
-                </div>
-
-                <div class="glass-card p-6 bg-white/80">
+            <div class="glass-card p-6 bg-white/80">
                     <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4"><i data-lucide="database" class="text-blue-600"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-slate-800">Data Operations</h3>
                     <div class="grid grid-cols-2 gap-3 mb-6">
@@ -522,7 +511,6 @@
                         <button id="btn-reset" class="btn btn-danger w-full text-sm font-bold bg-white border border-red-200"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Factory Reset</button>
                     </div>
                 </div>
-            </div>
         </section>
     </main>
 </div>
@@ -817,40 +805,9 @@ const DBManager = (() => {
     return { init, getAll, getDocsByRoom, put, remove, clearStore };
 })();
 
-// ================== AI SERVICE ==================
-const AIService = (() => {
-    const streamAnalysis = async (prompt, apiKey, onChunk, onComplete, onError) => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
-        try {
-            const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-            
-            // ดึงข้อความ Error ที่แท้จริงจาก Google มาแสดง
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                const errorMessage = errorData.error?.message || `HTTP ${res.status} - ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้`;
-                throw new Error(errorMessage);
-            }
-
-            const reader = res.body.getReader(); const decoder = new TextDecoder('utf-8'); let buffer = '';
-            while (true) {
-                const { done, value } = await reader.read(); if (done) break;
-                buffer += decoder.decode(value, { stream: true }); const lines = buffer.split('\n'); buffer = lines.pop();
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const dataStr = line.slice(6); if (dataStr === '[DONE]') continue;
-                        try { const d = JSON.parse(dataStr); if (d.candidates && d.candidates[0].content) onChunk(d.candidates[0].content.parts[0].text); } catch (e) {}
-                    }
-                }
-            }
-            onComplete();
-        } catch (error) { onError(error); }
-    };
-    return { streamAnalysis };
-})();
-
 // ================== MAIN APP ==================
 const App = (() => {
-    let state = { rooms: [], transactions: [], apiKey: '', chart: null, viewMode: 'month' };
+    let state = { rooms: [], transactions: [], viewMode: 'month' };
 
     const escHtml = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -883,8 +840,6 @@ const App = (() => {
     const start = async () => {
         try {
             await DBManager.init(); state.rooms = await DBManager.getAll('rooms'); state.transactions = await DBManager.getAll('transactions');
-            const keys = await DBManager.getAll('settings'); const k = keys.find(x=>x.key==='gemini_key');
-            if(k){ state.apiKey=k.value; document.getElementById('input-api-key').value=k.value; }
         } catch (e) { console.warn("Fallback Mode:", e); }
         finally {
             const now = new Date(); 
@@ -1580,7 +1535,6 @@ const App = (() => {
             showToast('ลงบันทึกบัญชีสำเร็จ', 'success');
         });
 
-        document.getElementById('btn-save-key').addEventListener('click', async () => { const k = document.getElementById('input-api-key').value; await DBManager.put('settings', {key:'gemini_key',value:k}); state.apiKey=k; showToast('ระบบเชื่อมต่อ AI สำเร็จ','success'); });
         
         document.getElementById('btn-export').addEventListener('click', async () => { 
             try {
