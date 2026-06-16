@@ -272,6 +272,8 @@
             #tx-history-panel { height: auto !important; max-height: none !important; }
             #tx-scroll-area { max-height: 60dvh; }
             .delete-tx-btn { opacity: 1 !important; }
+            /* Push tx cards left so FAB (56px + 1.25rem gap) doesn't cover the delete button */
+            #tx-history-cards { padding-right: calc(56px + 2rem); }
 
             /* Bigger touch targets */
             .btn { min-height: 48px; }
