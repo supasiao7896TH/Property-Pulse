@@ -843,35 +843,8 @@ const App = (() => {
             let yHtml=''; for(let y=now.getFullYear(); y>=now.getFullYear()-5; y--) yHtml+=`<option value="${y}">ปี ${y}</option>`;
             document.getElementById('dash-year').innerHTML = yHtml;
 
-            setupEvents(); 
-            await checkAutoRun(); 
+            setupEvents();
             renderAll();
-        }
-    };
-
-    const checkAutoRun = async () => {
-        if(state.rooms.length === 0) return;
-        const currentMonth = document.getElementById('dash-month').value;
-        const runKey = 'autorun_' + currentMonth;
-        const keys = await DBManager.getAll('settings');
-        if(!keys.find(x => x.key === runKey)) {
-            if(await customConfirm(`ตรวจพบเดือนใหม่ (${currentMonth}) — ให้ระบบสร้างรายการ "รับค่าเช่า" และ "จ่ายค่างวด" อัตโนมัติสำหรับทุกห้องที่มีผู้เช่าหรือไม่? (แก้ไขทีหลังได้)`)) {
-                let addedCount = 0;
-                for(let r of state.rooms) {
-                    if(r.loan > 0) {
-                        const txE = {id:Date.now()+Math.random(), roomId:r.id, date:`${currentMonth}-01`, type:'Expense', category:'ค่าผ่อนสินเชื่อ', amount:r.loan, desc:'Auto-billing'};
-                        await DBManager.put('transactions', txE); state.transactions.push(txE); addedCount++;
-                    }
-                    if(r.tenant && r.tenant.name !== 'ว่าง' && r.tenant.rent > 0) {
-                        const txI = {id:Date.now()+Math.random(), roomId:r.id, date:`${currentMonth}-01`, type:'Income', category:'ค่าเช่า', amount:r.tenant.rent, desc:'Auto-billing'};
-                        await DBManager.put('transactions', txI); state.transactions.push(txI); addedCount++;
-                    }
-                }
-                await DBManager.put('settings', {key: runKey, value: true});
-                if(addedCount > 0) showToast(`รันบัญชีอัตโนมัติสำเร็จ ${addedCount} รายการ`, 'success');
-            } else {
-                await DBManager.put('settings', {key: runKey, value: 'skipped'});
-            }
         }
     };
 
@@ -962,16 +935,65 @@ const App = (() => {
     const renderRooms = () => {
         const container = document.getElementById('list-rooms');
         if(state.rooms.length === 0){ container.innerHTML = '<div class="col-span-full"><div class="empty-state"><i data-lucide="building" class="w-12 h-12 mb-3 text-blue-400 opacity-50"></i><p class="text-lg text-slate-700 font-bold">พอร์ตว่างเปล่า</p><p class="text-sm mt-1 text-slate-500">เริ่มต้นอาณาจักรของคุณด้วยการสร้างยูนิตแรก</p></div></div>'; if(typeof lucide!=='undefined') lucide.createIcons(); return; }
-        
-        const mStr = document.getElementById('dash-month').value; const currTxs = state.transactions.filter(t => t.date.startsWith(mStr));
+
+        const mStr = document.getElementById('dash-month').value;
+        const currTxs = state.transactions.filter(t => t.date.startsWith(mStr));
+
+        const now = new Date();
+        const todayDay = now.getDate();
+        const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const isPastMonth = mStr < currentMonthStr;
+        const isFutureMonth = mStr > currentMonthStr;
 
         container.innerHTML = state.rooms.map(room => {
-            const t = room.tenant || {name:'ว่าง',rent:0}; const occ = t.name!=='ว่าง';
-            const rTxs = currTxs.filter(x => x.roomId===room.id);
+            const t = room.tenant || {name:'ว่าง',rent:0};
+            const occ = t.name !== 'ว่าง';
+            const rTxs = currTxs.filter(x => x.roomId === room.id);
             const aLoan = rTxs.filter(x=>x.type==='Expense'&&x.category==='ค่าผ่อนสินเชื่อ').reduce((s,x)=>s+x.amount,0);
             const aRent = rTxs.filter(x=>x.type==='Income'&&x.category==='ค่าเช่า').reduce((s,x)=>s+x.amount,0);
-            const isLP = aLoan >= room.loan && room.loan>0; const isRP = aRent >= t.rent && t.rent>0;
-            
+            const isLP = aLoan >= room.loan && room.loan > 0;
+            const isRP = aRent >= t.rent && t.rent > 0;
+
+            // Loan status text & color based on due date (25th of month)
+            let loanStatusText, loanStatusColor;
+            if (isLP) {
+                loanStatusText = 'Settled'; loanStatusColor = 'text-emerald-500';
+            } else if (room.loan <= 0) {
+                loanStatusText = '-'; loanStatusColor = 'text-slate-400';
+            } else if (isFutureMonth) {
+                loanStatusText = 'Not Yet'; loanStatusColor = 'text-slate-400';
+            } else if (isPastMonth || todayDay > 25) {
+                loanStatusText = 'Overdue!'; loanStatusColor = 'text-red-500';
+            } else {
+                loanStatusText = 'Due 25th'; loanStatusColor = 'text-amber-500';
+            }
+
+            // Rent status text & color based on due date (5th of month)
+            let rentStatusText, rentStatusColor;
+            if (!occ) {
+                rentStatusText = '-'; rentStatusColor = 'text-slate-400';
+            } else if (isRP) {
+                rentStatusText = 'Received'; rentStatusColor = 'text-emerald-500';
+            } else if (isFutureMonth) {
+                rentStatusText = 'Not Yet'; rentStatusColor = 'text-slate-400';
+            } else if (isPastMonth || todayDay > 5) {
+                rentStatusText = 'Overdue!'; rentStatusColor = 'text-red-500';
+            } else {
+                rentStatusText = 'Due 5th'; rentStatusColor = 'text-amber-500';
+            }
+
+            const loanBtn = room.loan > 0
+                ? (isLP
+                    ? `<button class="py-2 bg-slate-100 text-emerald-600 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ จ่ายแล้ว</button>`
+                    : `<button class="py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-pay-btn shadow-sm" data-id="${room.id}" data-loan="${room.loan}"><i data-lucide="check-circle" class="w-4 h-4"></i> จ่ายงวด</button>`)
+                : `<button class="py-2 bg-slate-50 text-slate-300 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>-</button>`;
+
+            const rentBtn = !occ
+                ? `<button class="py-2 bg-slate-50 text-slate-300 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>-</button>`
+                : (isRP
+                    ? `<button class="py-2 bg-slate-100 text-blue-500 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ รับแล้ว</button>`
+                    : `<button class="py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-collect-rent-btn shadow-sm" data-id="${room.id}" data-rent="${t.rent}"><i data-lucide="wallet" class="w-4 h-4"></i> เก็บค่าเช่า</button>`);
+
             return `
                 <div class="p-6 glass-card relative flex flex-col justify-between h-full bg-white">
                     <div>
@@ -985,24 +1007,22 @@ const App = (() => {
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mb-5">
                             <div class="flex justify-between text-sm border-b border-slate-200 pb-2">
-                                <div><span class="text-xs text-slate-500 font-bold uppercase block">Bank Loan</span><span class="${isLP?'text-emerald-500':'text-red-500'} text-[10px] font-bold uppercase">${isLP?'Settled':'Pending'}</span></div>
+                                <div><span class="text-xs text-slate-500 font-bold uppercase block">Bank Loan</span><span class="${loanStatusColor} text-[10px] font-bold uppercase">${loanStatusText}</span></div>
                                 <div class="text-right"><span class="block font-bold text-slate-700">${formatMoney(room.loan)}</span><span class="text-[10px] text-slate-400">Actual: ${formatMoney(aLoan)}</span></div>
                             </div>
                             <div class="flex justify-between text-sm">
-                                <div><span class="text-xs text-slate-500 font-bold uppercase block">Rent Income</span><span class="${isRP?'text-emerald-500':(occ?'text-amber-500':'text-slate-400')} text-[10px] font-bold uppercase">${isRP?'Received':(occ?'Awaiting':'-')}</span></div>
+                                <div><span class="text-xs text-slate-500 font-bold uppercase block">Rent Income</span><span class="${rentStatusColor} text-[10px] font-bold uppercase">${rentStatusText}</span></div>
                                 <div class="text-right"><span class="block font-bold text-blue-600">${formatMoney(t.rent)}</span><span class="text-[10px] text-slate-400">Actual: ${formatMoney(aRent)}</span></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100">
-                        ${isLP ? 
-                            `<button class="col-span-2 sm:col-span-4 xl:col-span-1 py-2 bg-slate-100 text-emerald-600 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ จ่ายแล้ว</button>` : 
-                            `<button class="col-span-2 sm:col-span-4 xl:col-span-1 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-pay-btn shadow-sm" data-id="${room.id}" data-loan="${room.loan}"><i data-lucide="check-circle" class="w-4 h-4"></i> จ่ายงวด</button>`
-                        }
-                        <button class="col-span-2 sm:col-span-2 xl:col-span-1 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 manage-tenant-btn shadow-sm" data-id="${room.id}"><i data-lucide="user" class="w-4 h-4"></i> ผู้เช่า</button>
-                        <button class="col-span-1 sm:col-span-1 xl:col-span-1 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition flex items-center justify-center manage-doc-btn shadow-sm" data-id="${room.id}" title="คลังเอกสาร"><i data-lucide="folder" class="w-4 h-4"></i></button>
-                        <button class="col-span-1 sm:col-span-1 xl:col-span-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center generate-invoice-btn shadow-sm" data-id="${room.id}" title="พิมพ์ใบแจ้งหนี้"><i data-lucide="printer" class="w-4 h-4"></i></button>
+
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                        ${loanBtn}
+                        ${rentBtn}
+                        <button class="col-span-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 manage-tenant-btn shadow-sm" data-id="${room.id}"><i data-lucide="user" class="w-4 h-4"></i> ผู้เช่า</button>
+                        <button class="py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition flex items-center justify-center manage-doc-btn shadow-sm" data-id="${room.id}" title="คลังเอกสาร"><i data-lucide="folder" class="w-4 h-4"></i></button>
+                        <button class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center generate-invoice-btn shadow-sm" data-id="${room.id}" title="พิมพ์ใบแจ้งหนี้"><i data-lucide="printer" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             `;
@@ -1278,8 +1298,18 @@ const App = (() => {
                 const id=parseInt(qBtn.dataset.id); const ln=parseFloat(qBtn.dataset.loan); const r=state.rooms.find(x=>x.id===id);
                 customConfirm(`บันทึกจ่ายค่างวด ${formatMoney(ln)} สำหรับยูนิต ${r.number}?`).then(async ok => {
                     if(!ok) return;
-                    const tx = {id:Date.now(),roomId:id,date:document.getElementById('dash-month').value+'-01',type:'Expense',category:'ค่าผ่อนสินเชื่อ',amount:ln,desc:'Quick Pay'};
+                    const tx = {id:Date.now(),roomId:id,date:new Date().toISOString().split('T')[0],type:'Expense',category:'ค่าผ่อนสินเชื่อ',amount:ln,desc:'Quick Pay'};
                     await DBManager.put('transactions', tx); state.transactions.push(tx); renderAll(); showToast('บันทึกค่างวดสำเร็จ','success');
+                });
+            }
+
+            const qRentBtn = e.target.closest('.quick-collect-rent-btn');
+            if(qRentBtn) {
+                const id=parseInt(qRentBtn.dataset.id); const rent=parseFloat(qRentBtn.dataset.rent); const r=state.rooms.find(x=>x.id===id);
+                customConfirm(`บันทึกรับค่าเช่า ${formatMoney(rent)} สำหรับยูนิต ${r.number}?`).then(async ok => {
+                    if(!ok) return;
+                    const tx = {id:Date.now(),roomId:id,date:new Date().toISOString().split('T')[0],type:'Income',category:'ค่าเช่า',amount:rent,desc:'Quick Collect'};
+                    await DBManager.put('transactions', tx); state.transactions.push(tx); renderAll(); showToast('บันทึกรับค่าเช่าสำเร็จ','success');
                 });
             }
             
