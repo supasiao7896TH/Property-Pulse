@@ -246,6 +246,14 @@
         .tx-card:active { transform: scale(0.98); }
         .tx-card-icon { width: 42px; height: 42px; flex-shrink: 0; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; }
 
+        /* ===== PRINT (Tax Report PDF) ===== */
+        @media print {
+            body * { visibility: hidden; }
+            #tax-print-area, #tax-print-area * { visibility: visible; }
+            #tax-print-area { position: fixed; top: 0; left: 0; width: 100%; padding: 24px; font-family: 'Sarabun', sans-serif; }
+            .no-print { display: none !important; }
+        }
+
         /* =============================================
            ===== MOBILE RESPONSIVE (max 767px) ========
            ============================================= */
@@ -449,7 +457,10 @@
                     <div class="p-4 border-b border-slate-200 bg-white/90 backdrop-blur z-20">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-lg font-bold flex items-center gap-2 text-slate-800"><i data-lucide="filter" class="text-blue-500 w-5 h-5"></i> Advanced Data Filter</h3>
-                            <button id="btn-reset-filters" type="button" class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"><i data-lucide="refresh-cw" class="w-3 h-3"></i> เคลียร์ตัวกรอง</button>
+                            <div class="flex items-center gap-2">
+                                <button id="btn-open-tax-report" type="button" class="text-xs text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded border border-emerald-200 transition"><i data-lucide="file-text" class="w-3 h-3"></i> รายงานภาษี</button>
+                                <button id="btn-reset-filters" type="button" class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"><i data-lucide="refresh-cw" class="w-3 h-3"></i> เคลียร์ตัวกรอง</button>
+                            </div>
                         </div>
                         <div class="relative mb-2">
                             <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
@@ -672,6 +683,69 @@
     </div>
 </div>
 
+<!-- Move-Out Modal -->
+<div id="modal-moveout" class="modal-backdrop">
+    <div class="modal-content relative">
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-moveout"><i data-lucide="x"></i></button>
+        <div class="flex items-center gap-3 mb-6">
+            <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="log-out"></i></div>
+            <div><h3 class="text-xl font-bold text-slate-800">บันทึกย้ายออก</h3><p id="moveout-room-subtitle" class="text-sm font-bold text-slate-500"></p></div>
+        </div>
+        <input type="hidden" id="moveout-room-id">
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">วันที่ย้ายออก</label>
+                <input type="date" id="moveout-date" class="input-glass bg-white">
+            </div>
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <p class="text-xs font-bold text-slate-600 mb-3">สถานะเงินมัดจำ <span id="moveout-deposit-label" class="text-blue-600"></span></p>
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="deposit-radio" value="returned" class="accent-emerald-500"> <span class="font-bold text-emerald-600">คืนครบแล้ว</span></label>
+                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="deposit-radio" value="deducted"> <span class="font-bold text-amber-600">หักค่าเสียหายบางส่วน</span></label>
+                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="deposit-radio" value="pending"> <span class="font-bold text-red-500">ยังไม่ได้คืน</span></label>
+                </div>
+            </div>
+        </div>
+        <div class="pt-5 flex justify-end gap-3">
+            <button type="button" class="btn btn-secondary modal-close-btn" data-modal="modal-moveout">ยกเลิก</button>
+            <button id="btn-confirm-moveout" class="btn bg-red-600 hover:bg-red-700 text-white px-6"><i data-lucide="log-out" class="w-4 h-4"></i> ยืนยันย้ายออก</button>
+        </div>
+    </div>
+</div>
+
+<!-- Tenant History Modal -->
+<div id="modal-tenant-history" class="modal-backdrop">
+    <div class="modal-content relative">
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-tenant-history"><i data-lucide="x"></i></button>
+        <div class="flex items-center gap-3 mb-5">
+            <div class="p-3 bg-slate-100 text-slate-600 rounded-xl"><i data-lucide="history"></i></div>
+            <div><h3 class="text-xl font-bold text-slate-800">ประวัติผู้เช่า</h3><p id="history-room-subtitle" class="text-sm font-bold text-slate-500"></p></div>
+        </div>
+        <div id="tenant-history-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
+    </div>
+</div>
+
+<!-- Tax Report Modal -->
+<div id="modal-tax-report" class="modal-backdrop">
+    <div class="modal-content relative">
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition no-print" data-modal="modal-tax-report"><i data-lucide="x"></i></button>
+        <div id="tax-print-area">
+            <div class="flex items-center justify-between mb-4 no-print">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl"><i data-lucide="file-text"></i></div>
+                    <div><h3 class="text-xl font-bold text-slate-800">รายงานสรุปเพื่อยื่นภาษี</h3><p class="text-xs text-slate-500 font-bold">ภ.ง.ด. 90 — เงินได้ประเภท 5 (รายได้จากทรัพย์สิน)</p></div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 mb-4 no-print">
+                <select id="tax-year-select" class="input-glass bg-white text-sm font-bold"></select>
+                <button id="btn-generate-tax" class="btn btn-primary text-sm px-4"><i data-lucide="refresh-cw" class="w-4 h-4"></i> สร้างรายงาน</button>
+                <button onclick="window.print()" class="btn bg-slate-700 hover:bg-slate-800 text-white text-sm px-4"><i data-lucide="printer" class="w-4 h-4"></i> พิมพ์ PDF</button>
+            </div>
+            <div id="tax-report-body"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Tenant Info Modal -->
 <div id="modal-tenant" class="modal-backdrop">
     <div class="modal-content relative">
@@ -706,7 +780,13 @@
                     <div class="relative"><i data-lucide="file-text" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i><input type="text" id="t-notes" class="input-glass pl-9 bg-white" placeholder="เช่น แจ้งย้ายออกสิ้นเดือนมีนาคม..."></div>
                 </div>
             </div>
-            <div class="pt-4 flex justify-end gap-3"><button type="submit" class="btn btn-primary px-8 shadow-blue-500/30"><i data-lucide="save"></i> บันทึกโพรไฟล์</button></div>
+            <div class="pt-4 flex flex-wrap justify-between gap-2">
+                <div class="flex gap-2">
+                    <button type="button" id="btn-open-moveout" class="btn bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-sm hidden"><i data-lucide="log-out" class="w-4 h-4"></i> ย้ายออก</button>
+                    <button type="button" id="btn-open-history" class="btn bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 text-sm"><i data-lucide="history" class="w-4 h-4"></i> ประวัติ</button>
+                </div>
+                <button type="submit" class="btn btn-primary px-8 shadow-blue-500/30"><i data-lucide="save"></i> บันทึกโพรไฟล์</button>
+            </div>
         </form>
     </div>
 </div>
@@ -1067,6 +1147,7 @@ const App = (() => {
                         <button class="col-span-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 manage-tenant-btn shadow-sm" data-id="${room.id}"><i data-lucide="user" class="w-4 h-4"></i> ผู้เช่า</button>
                         <button class="py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition flex items-center justify-center manage-doc-btn shadow-sm" data-id="${room.id}" title="คลังเอกสาร"><i data-lucide="folder" class="w-4 h-4"></i></button>
                         ${calcBtn}
+                        <button class="py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-lg text-xs font-bold transition flex items-center justify-center tenant-history-btn shadow-sm" data-id="${room.id}" title="ประวัติผู้เช่า"><i data-lucide="history" class="w-4 h-4"></i></button>
                         <button class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center generate-invoice-btn shadow-sm" data-id="${room.id}" title="พิมพ์ใบแจ้งหนี้"><i data-lucide="printer" class="w-4 h-4"></i></button>
                     </div>
                 </div>
@@ -1392,9 +1473,19 @@ const App = (() => {
                 if(r) {
                     document.getElementById('tenant-modal-room').textContent = `Unit ${r.number}`; document.getElementById('tenant-room-id').value = r.id;
                     const t = r.tenant||{}; document.getElementById('t-name').value=t.name==='ว่าง'?'':t.name; document.getElementById('t-phone').value=t.phone||''; document.getElementById('t-line').value=t.line||''; document.getElementById('t-rent').value=t.rent||0; document.getElementById('t-deposit').value=t.deposit||0; document.getElementById('t-common').value=t.common||0; document.getElementById('t-start').value=t.start||''; document.getElementById('t-end').value=t.end||''; document.getElementById('t-notes').value=t.notes||'';
+                    const isOcc = t.name && t.name !== 'ว่าง';
+                    document.getElementById('btn-open-moveout').classList.toggle('hidden', !isOcc);
                     document.getElementById('modal-tenant').classList.add('active');
+                    if(typeof lucide!=='undefined') lucide.createIcons();
                 }
             }
+
+            const histBtn = e.target.closest('.tenant-history-btn');
+            if(histBtn) {
+                const r = state.rooms.find(x=>x.id===parseInt(histBtn.dataset.id));
+                if(r) openTenantHistory(r);
+            }
+
             if(iBtn) generateInvoice(parseInt(iBtn.dataset.id));
             if(docBtn) openDocModal(parseInt(docBtn.dataset.id));
         });
@@ -1505,6 +1596,141 @@ const App = (() => {
         document.getElementById('ls-months-input').addEventListener('keydown', e => {
             if (e.key === 'Enter') document.getElementById('ls-refresh-btn').click();
         });
+
+        // --- Tenant History & Move-Out ---
+        const depositStatusLabel = { returned: 'คืนครบแล้ว ✅', deducted: 'หักค่าเสียหาย ⚠️', pending: 'ยังไม่คืน ❌' };
+
+        const openTenantHistory = (room) => {
+            document.getElementById('history-room-subtitle').textContent = `ยูนิต ${room.number}`;
+            const history = room.tenantHistory || [];
+            const listEl = document.getElementById('tenant-history-list');
+            if (history.length === 0) {
+                listEl.innerHTML = '<p class="text-sm text-center text-slate-400 py-6">ยังไม่มีประวัติผู้เช่าเก่า</p>';
+            } else {
+                listEl.innerHTML = [...history].reverse().map((h, i) => `
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-bold text-slate-800">${escHtml(h.name)}</div>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${h.depositStatus==='returned'?'bg-emerald-100 text-emerald-700':h.depositStatus==='deducted'?'bg-amber-100 text-amber-700':'bg-red-100 text-red-600'}">${depositStatusLabel[h.depositStatus]||'-'}</span>
+                        </div>
+                        <div class="text-xs text-slate-500 space-y-0.5">
+                            <div><span class="font-bold">เบอร์:</span> ${escHtml(h.phone||'-')}</div>
+                            <div><span class="font-bold">เข้า:</span> ${escHtml(h.start||'-')} <span class="font-bold ml-2">ออก:</span> ${escHtml(h.moveOutDate||'-')}</div>
+                            <div><span class="font-bold">มัดจำ:</span> ${formatMoney(h.deposit||0)}</div>
+                        </div>
+                    </div>`).join('');
+            }
+            document.getElementById('modal-tenant-history').classList.add('active');
+        };
+
+        document.getElementById('btn-open-moveout').addEventListener('click', () => {
+            const id = parseInt(document.getElementById('tenant-room-id').value);
+            const r = state.rooms.find(x=>x.id===id);
+            if(!r) return;
+            document.getElementById('moveout-room-id').value = id;
+            document.getElementById('moveout-room-subtitle').textContent = `ยูนิต ${r.number} — ${r.tenant?.name||''}`;
+            document.getElementById('moveout-deposit-label').textContent = `(มัดจำ ${formatMoney(r.tenant?.deposit||0)})`;
+            document.getElementById('moveout-date').value = new Date().toISOString().split('T')[0];
+            document.querySelector('input[name="deposit-radio"][value="returned"]').checked = true;
+            document.getElementById('modal-tenant').classList.remove('active');
+            document.getElementById('modal-moveout').classList.add('active');
+            if(typeof lucide!=='undefined') lucide.createIcons();
+        });
+
+        document.getElementById('btn-open-history').addEventListener('click', () => {
+            const id = parseInt(document.getElementById('tenant-room-id').value);
+            const r = state.rooms.find(x=>x.id===id);
+            if(r) openTenantHistory(r);
+        });
+
+        document.getElementById('btn-confirm-moveout').addEventListener('click', async () => {
+            const id = parseInt(document.getElementById('moveout-room-id').value);
+            const idx = state.rooms.findIndex(r=>r.id===id);
+            if(idx<0) return;
+            const r = state.rooms[idx];
+            const moveOutDate = document.getElementById('moveout-date').value;
+            const depositStatus = document.querySelector('input[name="deposit-radio"]:checked')?.value || 'pending';
+            if(!r.tenantHistory) r.tenantHistory = [];
+            r.tenantHistory.push({ name:r.tenant.name, phone:r.tenant.phone||'', start:r.tenant.start||'', moveOutDate, deposit:r.tenant.deposit||0, depositStatus, archivedAt:new Date().toISOString() });
+            r.tenant = { name:'ว่าง', rent:0, deposit:0, common:0 };
+            await DBManager.put('rooms', r);
+            document.getElementById('modal-moveout').classList.remove('active');
+            renderAll();
+            showToast(`บันทึกย้ายออกสำเร็จ — ห้องว่างแล้ว`, 'success');
+        });
+
+        // --- Tax Report ---
+        const generateTaxReport = () => {
+            const year = document.getElementById('tax-year-select').value;
+            const txs = state.transactions.filter(t => t.date.startsWith(year));
+            const now = new Date();
+            let totalInc = 0, totalExp = 0;
+
+            const rows = state.rooms.map(room => {
+                const rTxs = txs.filter(t=>t.roomId===room.id);
+                const inc = rTxs.filter(t=>t.type==='Income').reduce((s,t)=>s+t.amount,0);
+                const exp = rTxs.filter(t=>t.type==='Expense').reduce((s,t)=>s+t.amount,0);
+                const net = inc - exp;
+                totalInc += inc; totalExp += exp;
+                const tenant = room.tenant?.name && room.tenant.name!=='ว่าง' ? room.tenant.name : '-';
+                const period = room.tenant?.start ? `${room.tenant.start} ถึง ${room.tenant.end||'ปัจจุบัน'}` : '-';
+                return `<tr class="border-b border-slate-100">
+                    <td class="py-2 px-3 font-bold text-slate-800">${escHtml(room.number)}</td>
+                    <td class="py-2 px-3 text-sm text-slate-600">${escHtml(tenant)}</td>
+                    <td class="py-2 px-3 text-xs text-slate-500">${escHtml(period)}</td>
+                    <td class="py-2 px-3 text-right font-bold text-emerald-600">${formatMoney(inc)}</td>
+                    <td class="py-2 px-3 text-right text-red-500">${formatMoney(exp)}</td>
+                    <td class="py-2 px-3 text-right font-bold ${net>=0?'text-emerald-700':'text-red-600'}">${formatMoney(net)}</td>
+                </tr>`;
+            }).join('');
+
+            const deductFlat = Math.round(totalInc * 0.30);
+            const netForTax = totalInc - deductFlat;
+
+            document.getElementById('tax-report-body').innerHTML = `
+                <div class="mb-4 pb-2 border-b border-slate-200">
+                    <h2 class="text-lg font-black text-slate-800">รายงานสรุปรายได้ ปี ${year}</h2>
+                    <p class="text-xs text-slate-500">วันที่พิมพ์: ${now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'})}</p>
+                </div>
+                <div class="overflow-auto mb-4">
+                    <table class="w-full text-sm border-collapse">
+                        <thead><tr class="bg-slate-100 text-left">
+                            <th class="py-2 px-3 text-xs font-bold text-slate-600">ห้อง</th>
+                            <th class="py-2 px-3 text-xs font-bold text-slate-600">ผู้เช่า</th>
+                            <th class="py-2 px-3 text-xs font-bold text-slate-600">ระยะเวลาเช่า</th>
+                            <th class="py-2 px-3 text-xs font-bold text-slate-600 text-right">รายรับ</th>
+                            <th class="py-2 px-3 text-xs font-bold text-slate-600 text-right">รายจ่าย</th>
+                            <th class="py-2 px-3 text-xs font-bold text-slate-600 text-right">กำไร/(ขาดทุน)</th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                        <tfoot><tr class="bg-slate-50 font-black border-t-2 border-slate-300">
+                            <td class="py-2 px-3" colspan="3">รวมทั้งหมด</td>
+                            <td class="py-2 px-3 text-right text-emerald-600">${formatMoney(totalInc)}</td>
+                            <td class="py-2 px-3 text-right text-red-500">${formatMoney(totalExp)}</td>
+                            <td class="py-2 px-3 text-right ${totalInc-totalExp>=0?'text-emerald-700':'text-red-600'}">${formatMoney(totalInc-totalExp)}</td>
+                        </tr></tfoot>
+                    </table>
+                </div>
+                <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-sm space-y-1.5">
+                    <p class="font-black text-slate-700 mb-2">สรุปเพื่อยื่น ภ.ง.ด. 90 (เงินได้ประเภท 5)</p>
+                    <div class="flex justify-between"><span class="text-slate-600">รายได้ค่าเช่ารวม</span><span class="font-bold">${formatMoney(totalInc)}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-600">หักค่าใช้จ่ายเหมา 30%</span><span class="font-bold text-red-500">-${formatMoney(deductFlat)}</span></div>
+                    <div class="flex justify-between border-t border-emerald-200 pt-1.5 mt-1.5"><span class="font-bold text-slate-800">รายได้สุทธิที่ต้องแจ้ง</span><span class="font-black text-emerald-700">${formatMoney(netForTax)}</span></div>
+                    <p class="text-[10px] text-slate-400 pt-1">*หมายเหตุ: หักค่าใช้จ่ายจริงได้หากมากกว่า 30% — ดูจากตารางด้านบน</p>
+                </div>`;
+        };
+
+        document.getElementById('btn-open-tax-report').addEventListener('click', () => {
+            const now = new Date();
+            const sel = document.getElementById('tax-year-select');
+            sel.innerHTML = '';
+            for(let y=now.getFullYear(); y>=now.getFullYear()-5; y--) sel.innerHTML += `<option value="${y}">${y}</option>`;
+            generateTaxReport();
+            document.getElementById('modal-tax-report').classList.add('active');
+            if(typeof lucide!=='undefined') lucide.createIcons();
+        });
+
+        document.getElementById('btn-generate-tax').addEventListener('click', generateTaxReport);
 
         // --- FAB + Quick-add transaction (mobile) ---
         document.getElementById('fab-add-tx').addEventListener('click', () => {
