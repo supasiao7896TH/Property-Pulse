@@ -2,7 +2,16 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('pp-theme');
+                var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+                if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+            } catch (e) {}
+        })();
+    </script>
     <title>Property Pulse V4 - Tycoon Edition (Light Theme)</title>
     
     <!-- PWA Manifest -->
@@ -47,6 +56,16 @@
             --glass-border: rgba(255, 255, 255, 0.6);
             --text-main: #1e293b;     /* Slate 800 */
             --text-muted: #64748b;    /* Slate 500 */
+        }
+
+        /* ===== Dark theme (toggled via [data-theme="dark"] on <html>) ===== */
+        :root[data-theme="dark"] {
+            --bg-gradient-1: #0f172a; /* Slate 900 */
+            --bg-gradient-2: #1e1b4b; /* Indigo 950 */
+            --glass-bg: rgba(30, 41, 59, 0.75);   /* Slate 800 translucent */
+            --glass-border: rgba(71, 85, 105, 0.5); /* Slate 600 */
+            --text-main: #f1f5f9;     /* Slate 100 */
+            --text-muted: #94a3b8;    /* Slate 400 */
         }
 
         body {
@@ -294,6 +313,103 @@
             /* Summary cards – single column */
             .grid.grid-cols-1.md\\:grid-cols-3 { grid-template-columns: 1fr !important; }
         }
+
+        /* ============================================================
+           ===== DARK MODE — component + utility-class overrides =====
+           ============================================================
+           Selector specificity ([data-theme="dark"] .x = 0,2,0) beats the
+           plain Tailwind utility (.x = 0,1,0) regardless of stylesheet
+           order, so these rules reliably win over the CDN-generated CSS. */
+
+        /* Core glass components (hardcoded rgba, not driven by the CSS vars above) */
+        [data-theme="dark"] .glass-card { background: rgba(30, 41, 59, 0.85); }
+        [data-theme="dark"] .glass-card:hover { border-color: rgba(100, 116, 139, 0.6); }
+        [data-theme="dark"] .input-glass { background: rgba(15, 23, 42, 0.6); border-color: rgba(71, 85, 105, 0.6); color: var(--text-main); }
+        [data-theme="dark"] .input-glass:focus { background: rgba(15, 23, 42, 0.9); }
+        [data-theme="dark"] .modal-content { background: rgba(30, 41, 59, 0.97); border-color: rgba(71, 85, 105, 0.6); }
+        [data-theme="dark"] #sidebar { background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6)); }
+        [data-theme="dark"] #bottom-nav { background: rgba(15, 23, 42, 0.97); border-top-color: rgba(71, 85, 105, 0.5); }
+        [data-theme="dark"] .nav-item.active { background: rgba(51, 65, 85, 0.9); }
+        [data-theme="dark"] .tx-card { background: rgba(30, 41, 59, 0.9); border-color: rgba(71, 85, 105, 0.5); }
+        [data-theme="dark"] .empty-state { background: rgba(30, 41, 59, 0.4); border-color: rgba(71, 85, 105, 0.6); }
+        [data-theme="dark"] .btn-secondary { background: rgba(30, 41, 59, 0.9); border-color: rgba(71, 85, 105, 0.6); color: var(--text-main); }
+        [data-theme="dark"] .btn-secondary:hover { background: rgba(51, 65, 85, 0.9); }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); }
+        [data-theme="dark"] .from-blue-50.to-indigo-50 { background-image: linear-gradient(to right, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15)); }
+
+        /* Translucent white/slate panel backgrounds (Tailwind opacity-modifier utilities) */
+        [data-theme="dark"] .bg-white\/60,
+        [data-theme="dark"] .bg-white\/80,
+        [data-theme="dark"] .bg-white\/90 { background-color: rgba(30, 41, 59, 0.85); }
+        [data-theme="dark"] .bg-slate-50\/50 { background-color: rgba(51, 65, 85, 0.3); }
+
+        /* Neutral surfaces / borders used throughout the markup */
+        [data-theme="dark"] .bg-white,
+        [data-theme="dark"] .bg-slate-50 { background-color: #1e293b; }
+        [data-theme="dark"] .bg-slate-100 { background-color: #334155; }
+        [data-theme="dark"] .bg-slate-200 { background-color: #475569; }
+        [data-theme="dark"] .border-slate-100,
+        [data-theme="dark"] .border-slate-200,
+        [data-theme="dark"] .border-slate-300 { border-color: #334155; }
+        [data-theme="dark"] .divide-slate-100 > * + * { border-color: #334155; }
+
+        /* Text */
+        [data-theme="dark"] .text-slate-800,
+        [data-theme="dark"] .text-slate-700 { color: #f1f5f9; }
+        [data-theme="dark"] .text-slate-600,
+        [data-theme="dark"] .text-slate-500 { color: #cbd5e1; }
+        [data-theme="dark"] .text-slate-400,
+        [data-theme="dark"] .text-slate-300,
+        [data-theme="dark"] .text-slate-200 { color: #94a3b8; }
+
+        /* Soft colored badges/chips (bg-50/100 + text-500/600/700 pairs used for status pills & quick-action buttons) */
+        [data-theme="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12); }
+        [data-theme="dark"] .bg-amber-100 { background-color: rgba(245, 158, 11, 0.18); }
+        [data-theme="dark"] .text-amber-500,
+        [data-theme="dark"] .text-amber-600,
+        [data-theme="dark"] .text-amber-700 { color: #fbbf24; }
+
+        [data-theme="dark"] .bg-blue-50 { background-color: rgba(59, 130, 246, 0.12); }
+        [data-theme="dark"] .bg-blue-100 { background-color: rgba(59, 130, 246, 0.18); }
+        [data-theme="dark"] .text-blue-500,
+        [data-theme="dark"] .text-blue-600,
+        [data-theme="dark"] .text-blue-700 { color: #60a5fa; }
+        [data-theme="dark"] .text-blue-400 { color: #93c5fd; }
+        [data-theme="dark"] .border-blue-100,
+        [data-theme="dark"] .border-blue-200 { border-color: rgba(59, 130, 246, 0.3); }
+
+        [data-theme="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12); }
+        [data-theme="dark"] .bg-emerald-100 { background-color: rgba(16, 185, 129, 0.18); }
+        [data-theme="dark"] .text-emerald-500,
+        [data-theme="dark"] .text-emerald-600,
+        [data-theme="dark"] .text-emerald-700 { color: #34d399; }
+        [data-theme="dark"] .border-emerald-100,
+        [data-theme="dark"] .border-emerald-200 { border-color: rgba(16, 185, 129, 0.3); }
+
+        [data-theme="dark"] .bg-indigo-100 { background-color: rgba(99, 102, 241, 0.18); }
+        [data-theme="dark"] .text-indigo-600 { color: #818cf8; }
+
+        [data-theme="dark"] .bg-purple-50 { background-color: rgba(168, 85, 247, 0.12); }
+        [data-theme="dark"] .bg-purple-100 { background-color: rgba(168, 85, 247, 0.18); }
+        [data-theme="dark"] .text-purple-500,
+        [data-theme="dark"] .text-purple-600,
+        [data-theme="dark"] .text-purple-700 { color: #c084fc; }
+        [data-theme="dark"] .border-purple-100 { border-color: rgba(168, 85, 247, 0.3); }
+
+        [data-theme="dark"] .bg-red-50 { background-color: rgba(239, 68, 68, 0.12); }
+        [data-theme="dark"] .bg-red-100 { background-color: rgba(239, 68, 68, 0.18); }
+        [data-theme="dark"] .text-red-400,
+        [data-theme="dark"] .text-red-500,
+        [data-theme="dark"] .text-red-600,
+        [data-theme="dark"] .text-red-700 { color: #f87171; }
+        [data-theme="dark"] .border-red-100,
+        [data-theme="dark"] .border-red-200 { border-color: rgba(239, 68, 68, 0.3); }
+
+        /* Brand credit badge — swap light/dark SVG with the theme, never mix grounds */
+        .brand-badge { width: min(300px, 78vw); height: auto; }
+        .brand-badge-dark { display: none; }
+        [data-theme="dark"] .brand-badge-light { display: none; }
+        [data-theme="dark"] .brand-badge-dark { display: block; }
     </style>
 </head>
 <body>
@@ -413,7 +529,7 @@
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">เป้าหมายผ่อน (ค่างวดแบงก์/เดือน)</label>
                         <div class="relative">
                             <span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span>
-                            <input type="number" id="input-room-loan" class="input-glass pl-8 bg-white" required min="0" placeholder="0">
+                            <input type="number" inputmode="decimal" id="input-room-loan" class="input-glass pl-8 bg-white" required min="0" placeholder="0">
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-full md:w-auto h-[46px]"><i data-lucide="check"></i> ลงทะเบียน</button>
@@ -446,7 +562,7 @@
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ยูนิตอ้างอิง</label><select id="tx-room" class="input-glass bg-white" required></select></div>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">วันที่ทำรายการ</label><input type="date" id="tx-date" class="input-glass bg-white" required></div>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">หมวดหมู่บัญชี</label><select id="tx-category" class="input-glass bg-white" required></select></div>
-                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ยอดเงิน (บาท)</label><div class="relative"><span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span><input type="number" id="tx-amount" class="input-glass pl-8 text-lg font-bold bg-white" required min="0.01" step="0.01" placeholder="0.00"></div></div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ยอดเงิน (บาท)</label><div class="relative"><span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span><input type="number" inputmode="decimal" id="tx-amount" class="input-glass pl-8 text-lg font-bold bg-white" required min="0.01" step="0.01" placeholder="0.00"></div></div>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">บันทึกเพิ่มเติม (Memo)</label><textarea id="tx-desc" class="input-glass bg-white" rows="2"></textarea></div>
                         <button type="submit" class="btn btn-primary w-full shadow-md shadow-blue-500/20">บันทึกยอด</button>
                     </form>
@@ -492,6 +608,22 @@
         <section id="view-settings" class="view-section space-y-6">
             <h2 class="text-3xl font-bold tracking-tight text-slate-800">ตั้งค่าระบบ (System Config)</h2>
 
+            <!-- Appearance / Theme card -->
+            <div class="glass-card p-6 bg-white/80">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0"><i id="theme-toggle-icon" data-lucide="moon" class="text-purple-600 w-5 h-5"></i></div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800">โหมดการแสดงผล</h3>
+                            <p class="text-xs text-slate-500">สลับโหมดสว่าง/มืด เหมาะกับจอ AMOLED ตอนกลางคืน</p>
+                        </div>
+                    </div>
+                    <button id="btn-theme-toggle" type="button" class="btn btn-secondary text-sm bg-white shrink-0" aria-pressed="false">
+                        <i data-lucide="moon" class="w-4 h-4"></i> <span id="theme-toggle-label">โหมดมืด</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Share / Install PWA card -->
             <div class="glass-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
                 <div class="flex items-center gap-3 mb-3">
@@ -523,6 +655,12 @@
                     </div>
                 </div>
         </section>
+
+        <!-- Brand credit — flickers, theme-aware (light/dark SVG swap) -->
+        <div class="pt-10 pb-2 flex justify-center" aria-label="Made by A(i)CODER 2025" role="img">
+            <img src="assets/brand/aicoder-light.svg" alt="" aria-hidden="true" class="brand-badge brand-badge-light" width="300" height="75">
+            <img src="assets/brand/aicoder-dark.svg" alt="" aria-hidden="true" class="brand-badge brand-badge-dark" width="300" height="75">
+        </div>
     </main>
 </div>
 
@@ -554,7 +692,7 @@
 <!-- Quick Add Transaction Modal (Bottom Sheet on mobile) -->
 <div id="modal-quick-tx" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="quick-tx-title">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-quick-tx" aria-label="ปิด"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-quick-tx" aria-label="ปิด"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-6">
             <div class="p-3 bg-blue-100 text-blue-600 rounded-xl"><i data-lucide="edit-3"></i></div>
             <div><h3 id="quick-tx-title" class="text-2xl font-bold text-slate-800">ลงรายการด่วน</h3><p class="text-sm font-bold text-slate-500">บันทึกรับ/จ่ายได้ทันทีจากทุกหน้า</p></div>
@@ -588,7 +726,7 @@
 <!-- Room Edit Modal -->
 <div id="modal-room-edit" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-room-edit"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-room-edit"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-6">
             <div class="p-3 bg-blue-100 text-blue-600 rounded-xl"><i data-lucide="edit"></i></div>
             <div><h3 class="text-2xl font-bold text-slate-800">แก้ไขข้อมูลยูนิต</h3><p class="text-sm font-bold text-slate-500">ปรับปรุงหมายเลขห้องหรือเป้าหมายค่างวด</p></div>
@@ -603,7 +741,7 @@
                 <label class="block text-xs font-bold text-slate-600 mb-1">เป้าหมายผ่อน (ค่างวดแบงก์/เดือน)</label>
                 <div class="relative">
                     <span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span>
-                    <input type="number" id="edit-room-loan" class="input-glass pl-8 bg-white" required min="0">
+                    <input type="number" inputmode="decimal" id="edit-room-loan" class="input-glass pl-8 bg-white" required min="0">
                 </div>
             </div>
             <div class="border-t border-slate-100 pt-4">
@@ -613,14 +751,14 @@
                         <label class="block text-xs font-bold text-slate-600 mb-1">ยอดเงินกู้คงเหลือ ณ เดือนที่บันทึก (฿)</label>
                         <div class="relative">
                             <span class="absolute left-3 top-3 text-slate-400 font-bold">฿</span>
-                            <input type="number" id="edit-room-balance" class="input-glass pl-8 bg-white" min="0" placeholder="เช่น 1200000">
+                            <input type="number" inputmode="decimal" id="edit-room-balance" class="input-glass pl-8 bg-white" min="0" placeholder="เช่น 1200000">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold text-slate-600 mb-1">ดอกเบี้ย (% ต่อปี)</label>
                             <div class="relative">
-                                <input type="number" id="edit-room-rate" class="input-glass pr-8 bg-white" min="0" max="30" step="0.01" placeholder="3.50">
+                                <input type="number" inputmode="decimal" id="edit-room-rate" class="input-glass pr-8 bg-white" min="0" max="30" step="0.01" placeholder="3.50">
                                 <span class="absolute right-3 top-3 text-slate-400 text-sm font-bold">%</span>
                             </div>
                         </div>
@@ -642,7 +780,7 @@
 <!-- Loan Amortization Schedule Modal -->
 <div id="modal-loan-schedule" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-loan-schedule"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-loan-schedule"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-4">
             <div class="p-3 bg-purple-100 text-purple-600 rounded-xl"><i data-lucide="calculator"></i></div>
             <div><h3 class="text-xl font-bold text-slate-800">ตารางผ่อนชำระ</h3><p id="ls-subtitle" class="text-sm font-bold text-slate-500"></p></div>
@@ -659,7 +797,7 @@
         </div>
         <div class="flex items-center gap-2 mb-3">
             <label class="text-sm font-bold text-slate-600 whitespace-nowrap">แสดง</label>
-            <input type="number" id="ls-months-input" class="input-glass bg-white w-20 text-center text-sm" min="1" max="360" value="12">
+            <input type="number" inputmode="numeric" id="ls-months-input" class="input-glass bg-white w-20 text-center text-sm" min="1" max="360" value="12">
             <label class="text-sm font-bold text-slate-600 whitespace-nowrap">เดือน</label>
             <button id="ls-refresh-btn" class="ml-2 px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg">แสดง</button>
         </div>
@@ -686,7 +824,7 @@
 <!-- Move-Out Modal -->
 <div id="modal-moveout" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-moveout"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-moveout"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-6">
             <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i data-lucide="log-out"></i></div>
             <div><h3 class="text-xl font-bold text-slate-800">บันทึกย้ายออก</h3><p id="moveout-room-subtitle" class="text-sm font-bold text-slate-500"></p></div>
@@ -716,7 +854,7 @@
 <!-- Tenant History Modal -->
 <div id="modal-tenant-history" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-tenant-history"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-tenant-history"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-5">
             <div class="p-3 bg-slate-100 text-slate-600 rounded-xl"><i data-lucide="history"></i></div>
             <div><h3 class="text-xl font-bold text-slate-800">ประวัติผู้เช่า</h3><p id="history-room-subtitle" class="text-sm font-bold text-slate-500"></p></div>
@@ -728,7 +866,7 @@
 <!-- Tax Report Modal -->
 <div id="modal-tax-report" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition no-print" data-modal="modal-tax-report"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center no-print" data-modal="modal-tax-report"><i data-lucide="x"></i></button>
         <div id="tax-print-area">
             <div class="flex items-center justify-between mb-4 no-print">
                 <div class="flex items-center gap-3">
@@ -749,7 +887,7 @@
 <!-- Tenant Info Modal -->
 <div id="modal-tenant" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-tenant"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-tenant"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-6">
             <div class="p-3 bg-blue-100 text-blue-600 rounded-xl"><i data-lucide="user-check"></i></div>
             <div><h3 class="text-2xl font-bold text-slate-800">ข้อมูลผู้เช่า (Tenant Profile)</h3><p class="text-sm font-bold text-blue-600" id="tenant-modal-room">ห้อง ...</p></div>
@@ -767,9 +905,9 @@
             <div class="p-4 bg-slate-50 rounded-xl space-y-4 border border-slate-200">
                 <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wide">Contract Details</h4>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div><label class="block text-xs font-bold text-slate-600 mb-1">ค่าเช่า</label><input type="number" id="t-rent" class="input-glass font-bold text-blue-600 bg-white" min="0"></div>
-                    <div><label class="block text-xs font-bold text-slate-600 mb-1">มัดจำ</label><input type="number" id="t-deposit" class="input-glass bg-white" min="0"></div>
-                    <div class="col-span-2 md:col-span-1"><label class="block text-xs font-bold text-slate-600 mb-1">ส่วนกลาง/ปี</label><input type="number" id="t-common" class="input-glass bg-white" min="0"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">ค่าเช่า</label><input type="number" inputmode="decimal" id="t-rent" class="input-glass font-bold text-blue-600 bg-white" min="0"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">มัดจำ</label><input type="number" inputmode="decimal" id="t-deposit" class="input-glass bg-white" min="0"></div>
+                    <div class="col-span-2 md:col-span-1"><label class="block text-xs font-bold text-slate-600 mb-1">ส่วนกลาง/ปี</label><input type="number" inputmode="decimal" id="t-common" class="input-glass bg-white" min="0"></div>
                 </div>
                 <div class="grid grid-cols-1 gap-4">
                     <div><label class="block text-xs font-bold text-slate-600 mb-1">เริ่มสัญญา</label><input type="date" id="t-start" class="input-glass bg-white"></div>
@@ -794,7 +932,7 @@
 <!-- Document Vault Modal -->
 <div id="modal-docs" class="modal-backdrop">
     <div class="modal-content relative">
-        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 p-1.5 rounded-full transition" data-modal="modal-docs"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center" data-modal="modal-docs"><i data-lucide="x"></i></button>
         <div class="flex items-center gap-3 mb-6">
             <div class="p-3 bg-amber-100 text-amber-600 rounded-xl"><i data-lucide="folder-open"></i></div>
             <div><h3 class="text-2xl font-bold text-slate-800">คลังเอกสาร (Doc Vault)</h3><p class="text-sm font-bold text-amber-600" id="doc-modal-room">ห้อง ...</p></div>
@@ -1099,15 +1237,15 @@ const App = (() => {
 
             const loanBtn = room.loan > 0
                 ? (isLP
-                    ? `<button class="py-2 bg-slate-100 text-emerald-600 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ จ่ายแล้ว</button>`
-                    : `<button class="py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-pay-btn shadow-sm" data-id="${room.id}" data-loan="${room.loan}"><i data-lucide="check-circle" class="w-4 h-4"></i> จ่ายงวด</button>`)
-                : `<button class="py-2 bg-slate-50 text-slate-300 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>-</button>`;
+                    ? `<button class="min-h-[44px] bg-slate-100 text-emerald-600 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ จ่ายแล้ว</button>`
+                    : `<button class="min-h-[44px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-pay-btn shadow-sm" data-id="${room.id}" data-loan="${room.loan}"><i data-lucide="check-circle" class="w-4 h-4"></i> จ่ายงวด</button>`)
+                : `<button class="min-h-[44px] bg-slate-50 text-slate-300 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>-</button>`;
 
             const rentBtn = !occ
-                ? `<button class="py-2 bg-slate-50 text-slate-300 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>-</button>`
+                ? `<button class="min-h-[44px] bg-slate-50 text-slate-300 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>-</button>`
                 : (isRP
-                    ? `<button class="py-2 bg-slate-100 text-blue-500 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ รับแล้ว</button>`
-                    : `<button class="py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-collect-rent-btn shadow-sm" data-id="${room.id}" data-rent="${t.rent}"><i data-lucide="wallet" class="w-4 h-4"></i> เก็บค่าเช่า</button>`);
+                    ? `<button class="min-h-[44px] bg-slate-100 text-blue-500 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled>✅ รับแล้ว</button>`
+                    : `<button class="min-h-[44px] bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 quick-collect-rent-btn shadow-sm" data-id="${room.id}" data-rent="${t.rent}"><i data-lucide="wallet" class="w-4 h-4"></i> เก็บค่าเช่า</button>`);
 
             const hasLoanData = room.loanBalance > 0 && room.loanRate > 0 && room.loanBalanceAsOf;
             const currentBalance = hasLoanData ? calcLoanCurrentBalance(room) : null;
@@ -1115,8 +1253,8 @@ const App = (() => {
                 ? `<div class="text-[10px] text-purple-500 font-bold mt-0.5">คงเหลือ ~${formatMoneyShort(currentBalance)}</div>`
                 : '';
             const calcBtn = hasLoanData
-                ? `<button class="py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 loan-schedule-btn shadow-sm" data-id="${room.id}" title="ตารางผ่อนชำระ"><i data-lucide="calculator" class="w-4 h-4"></i></button>`
-                : `<button class="py-2 bg-slate-50 text-slate-200 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled title="ยังไม่ได้กรอกข้อมูลสินเชื่อ"><i data-lucide="calculator" class="w-4 h-4"></i></button>`;
+                ? `<button class="min-h-[44px] bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 loan-schedule-btn shadow-sm" data-id="${room.id}" title="ตารางผ่อนชำระ"><i data-lucide="calculator" class="w-4 h-4"></i></button>`
+                : `<button class="min-h-[44px] bg-slate-50 text-slate-200 rounded-lg text-xs font-bold cursor-not-allowed shadow-sm" disabled title="ยังไม่ได้กรอกข้อมูลสินเชื่อ"><i data-lucide="calculator" class="w-4 h-4"></i></button>`;
 
             return `
                 <div class="p-6 glass-card relative flex flex-col justify-between h-full bg-white">
@@ -1125,8 +1263,8 @@ const App = (() => {
                             <h4 class="text-4xl font-black text-slate-800">${escHtml(room.number)}</h4>
                             <div class="flex items-center gap-1">
                                 <span class="px-2 py-1 text-[10px] font-bold rounded-full mr-1 ${occ?'bg-emerald-100 text-emerald-700 border border-emerald-200':'bg-slate-100 text-slate-500'}">${occ?'Occupied':'Vacant'}</span>
-                                <button class="p-1.5 text-slate-400 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 rounded-lg transition edit-room-btn" data-id="${room.id}" title="แก้ไขยูนิต"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                <button class="p-1.5 text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 rounded-lg transition delete-room-btn" data-id="${room.id}" title="ลบยูนิต"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button class="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 rounded-lg transition edit-room-btn" data-id="${room.id}" title="แก้ไขยูนิต"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                <button class="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 rounded-lg transition delete-room-btn" data-id="${room.id}" title="ลบยูนิต"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mb-5">
@@ -1144,11 +1282,11 @@ const App = (() => {
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                         ${loanBtn}
                         ${rentBtn}
-                        <button class="col-span-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 manage-tenant-btn shadow-sm" data-id="${room.id}"><i data-lucide="user" class="w-4 h-4"></i> ผู้เช่า</button>
-                        <button class="py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition flex items-center justify-center manage-doc-btn shadow-sm" data-id="${room.id}" title="คลังเอกสาร"><i data-lucide="folder" class="w-4 h-4"></i></button>
+                        <button class="col-span-2 min-h-[44px] bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 manage-tenant-btn shadow-sm" data-id="${room.id}"><i data-lucide="user" class="w-4 h-4"></i> ผู้เช่า</button>
+                        <button class="min-h-[44px] bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition flex items-center justify-center manage-doc-btn shadow-sm" data-id="${room.id}" title="คลังเอกสาร"><i data-lucide="folder" class="w-4 h-4"></i></button>
                         ${calcBtn}
-                        <button class="py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-lg text-xs font-bold transition flex items-center justify-center tenant-history-btn shadow-sm" data-id="${room.id}" title="ประวัติผู้เช่า"><i data-lucide="history" class="w-4 h-4"></i></button>
-                        <button class="py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center generate-invoice-btn shadow-sm" data-id="${room.id}" title="พิมพ์ใบแจ้งหนี้"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                        <button class="min-h-[44px] bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-lg text-xs font-bold transition flex items-center justify-center tenant-history-btn shadow-sm" data-id="${room.id}" title="ประวัติผู้เช่า"><i data-lucide="history" class="w-4 h-4"></i></button>
+                        <button class="min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center generate-invoice-btn shadow-sm" data-id="${room.id}" title="พิมพ์ใบแจ้งหนี้"><i data-lucide="printer" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             `;
@@ -1198,7 +1336,7 @@ const App = (() => {
                 </div>
                 <div class="text-right flex flex-col items-end gap-1">
                     <span class="font-black ${isInc?'text-emerald-600':'text-red-500'}">${isInc?'+':'-'}${formatMoney(t.amount)}</span>
-                    <button class="text-slate-300 active:text-red-500 delete-tx-btn p-1" data-id="${t.id}" aria-label="ลบรายการ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button class="text-slate-300 active:text-red-500 delete-tx-btn min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 -mb-1" data-id="${t.id}" aria-label="ลบรายการ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             </div>`;
         }).join('');
@@ -1318,7 +1456,7 @@ const App = (() => {
                     <img src="${d.data}" class="img-thumbnail w-full h-24 object-cover rounded-xl" alt="${escHtml(d.name)}">
                     <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center gap-2">
                         <a href="${d.data}" download="${escHtml(d.name)}" class="text-white hover:text-blue-400 bg-white/20 p-1.5 rounded-full" title="ดาวน์โหลด"><i data-lucide="download" class="w-4 h-4"></i></a>
-                        <button class="text-white hover:text-red-400 delete-doc-btn bg-white/20 p-1.5 rounded-full" data-id="${d.id}" title="ลบ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button class="text-white hover:text-red-400 delete-doc-btn bg-white/20 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center" data-id="${d.id}" title="ลบ"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -1366,10 +1504,20 @@ const App = (() => {
             backdrop.addEventListener('click', (e) => { if(e.target === backdrop && backdrop.id !== 'modal-confirm') backdrop.classList.remove('active'); });
         });
 
+        let viewSwitchTimer = null;
         const switchView = (view) => {
             document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
-            document.querySelectorAll('.view-section.active').forEach(v => { v.style.opacity='0'; v.style.transform='translateY(15px)'; setTimeout(()=>v.classList.remove('active'),300); });
-            setTimeout(()=>{ const sec = document.getElementById(`view-${view}`); if(sec) sec.classList.add('active'); },300);
+            if (viewSwitchTimer) clearTimeout(viewSwitchTimer);
+            document.querySelectorAll('.view-section.active').forEach(v => { v.style.opacity='0'; v.style.transform='translateY(15px)'; });
+            /* Removing the old section and activating the new one share one
+               guarded timer, so rapid clicks reschedule instead of stacking —
+               that's what used to leave two sections active at once. */
+            viewSwitchTimer = setTimeout(() => {
+                document.querySelectorAll('.view-section.active').forEach(v => v.classList.remove('active'));
+                const sec = document.getElementById(`view-${view}`);
+                if (sec) sec.classList.add('active');
+                viewSwitchTimer = null;
+            }, 300);
         };
         document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(i => {
             i.addEventListener('click', () => { if(!i.classList.contains('active')) switchView(i.dataset.view); });
@@ -1761,8 +1909,26 @@ const App = (() => {
             showToast('ลงบันทึกบัญชีสำเร็จ', 'success');
         });
 
-        
-        document.getElementById('btn-export').addEventListener('click', async () => { 
+        const applyTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0f172a' : '#3b82f6');
+            const label = document.getElementById('theme-toggle-label');
+            const icon = document.getElementById('theme-toggle-icon');
+            if (label) label.textContent = theme === 'dark' ? 'โหมดสว่าง' : 'โหมดมืด';
+            if (icon) icon.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+            const toggleBtn = document.getElementById('btn-theme-toggle');
+            if (toggleBtn) toggleBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+        document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            try { localStorage.setItem('pp-theme', next); } catch (e) {}
+            applyTheme(next);
+        });
+        applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
+        document.getElementById('btn-export').addEventListener('click', async () => {
             try {
                 showToast('กำลังเตรียมไฟล์ข้อมูล...', 'info');
                 const docs = await DBManager.getAll('documents');

@@ -1,10 +1,12 @@
 /* Property Pulse PWA — Service Worker */
-const CACHE = 'property-pulse-v1';
+const CACHE = 'property-pulse-v3';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon.svg',
+  './assets/brand/aicoder-light.svg',
+  './assets/brand/aicoder-dark.svg',
 ];
 
 /* ── Install: cache the app shell ── */
