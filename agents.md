@@ -63,14 +63,11 @@ There is no test suite, linter, or CI. Verification is manual:
 - If you change what's stored in IndexedDB, bump `CONFIG.DB_VERSION` in
   `index.html` and add the needed store/index creation in
   `DBManager.init`'s `onupgradeneeded` handler.
-- The CSP `<meta>` tag in `<head>` still allow-lists
-  `https://generativelanguage.googleapis.com` even though Gemini AI
-  integration was removed (see git history: "remove: Gemini AI Engine").
-  Don't reintroduce AI/network calls without explicit product direction;
-  tighten rather than loosen the CSP when in doubt.
-- Don't reintroduce Chart.js usage casually — it's currently loaded but
-  unused (the cash-flow chart was deliberately removed). If you add a
-  chart back, make sure it's an intentional feature, not leftover scaffolding.
+- The CSP `<meta>` tag in `<head>` is tightened to `'self'`, Google Fonts,
+  Tailwind CDN, and Lucide CDN. Don't reintroduce AI/network calls without
+  explicit product direction; tighten rather than loosen the CSP when in doubt.
+- Chart.js has been removed from `<head>` as it is unused. If you add a
+  chart back, load it as an intentional feature, not leftover scaffolding.
 
 ## Commit conventions
 

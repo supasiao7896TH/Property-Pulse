@@ -36,16 +36,10 @@ no bundler, no linter config). Everything ships as-is to a static host
 
 - **Dependencies** are all loaded from CDNs, no `node_modules`:
   - Tailwind CSS (CDN build, used as a utility framework directly in markup)
-  - Chart.js (`cdn.jsdelivr.net`) — loaded but currently unused after the
-    cash-flow chart and AI analyst card were removed (see git history).
-  - Lucide icons (`unpkg.com`) — re-run `lucide.createIcons()` after any DOM
+  - Lucide icons (`unpkg.com`, pinned version `lucide@1.55.0`) — re-run `lucide.createIcons()` after any DOM
     update that injects new `data-lucide` elements.
   - Google Fonts (Sarabun).
-- **Content-Security-Policy** is declared via `<meta>` in `<head>`. It still
-  whitelists `https://generativelanguage.googleapis.com` in `connect-src`
-  even though the Gemini AI integration was deliberately removed (commit
-  `6fb5b99` — "remove: Gemini AI Engine"). Don't reintroduce AI calls without
-  product direction; if you touch the CSP, keep it as tight as possible.
+- **Content-Security-Policy** is declared via `<meta>` in `<head>`. Restricted to `'self'`, Google Fonts, Tailwind CDN, and Lucide CDN with no external AI or analytics network endpoints.
 - **Persistence**: IndexedDB via a small `DBManager` module
   (`index.html` ~line 848), database name `PropertyPulseDB_V4`, version 2,
   with object stores: `rooms`, `transactions`, `settings`, `documents`

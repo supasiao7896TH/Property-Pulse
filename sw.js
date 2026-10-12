@@ -1,5 +1,5 @@
 /* Property Pulse PWA — Service Worker */
-const CACHE = 'property-pulse-v3';
+const CACHE = 'property-pulse-v4';
 const APP_SHELL = [
   './',
   './index.html',
@@ -32,7 +32,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  const isCDN = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'unpkg.com',
+  const isCDN = ['cdn.tailwindcss.com', 'unpkg.com',
                   'fonts.googleapis.com', 'fonts.gstatic.com'].some(h => url.hostname.includes(h));
 
   if (isCDN) {
